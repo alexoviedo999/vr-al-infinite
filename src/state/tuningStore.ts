@@ -26,7 +26,7 @@ export const useTuningStore = create<TuningState>((set) => ({
   fogNear: 6,
   fogFar: 30,
   ringAnchorTs: [0.5, 0.8, 0.95],
-  firstOrbAnchorT: 0.45,
+  firstOrbAnchorT: 0.7,
   setSpeed: (v) => set({ speed: v }),
   setFogNear: (v) => set({ fogNear: v }),
   setFogFar: (v) => set({ fogFar: v }),
