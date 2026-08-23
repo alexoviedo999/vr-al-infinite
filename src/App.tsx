@@ -1,7 +1,12 @@
 import { Canvas } from '@react-three/fiber';
 import { Scene } from './scene/Scene';
+import { LockOnPrototype } from './scene/LockOnPrototype';
+import { Reticle } from './scene/Reticle';
 import { EnterVRButton } from './scene/EnterVRButton';
 import { useWebXRSupport } from './state/useWebXRSupport';
+
+/** Ticket #6 prototype flag — flip to false to restore the bootstrap Scene. */
+const PROTOTYPE_MODE = true;
 
 export default function App() {
   const xrSupported = useWebXRSupport();
@@ -19,13 +24,14 @@ export default function App() {
         dpr={[1, 1.25]}
         frameloop="always"
         camera={{ position: [0, 0, 5], fov: 70 }}
-        // Make the WebXR manager accept session requests with FFR enabled.
         onCreated={({ gl }) => {
           gl.xr.enabled = true;
         }}
       >
-        <Scene />
+        {PROTOTYPE_MODE ? <LockOnPrototype /> : <Scene />}
       </Canvas>
+
+      {PROTOTYPE_MODE && <Reticle />}
 
       <div
         style={{
@@ -41,8 +47,9 @@ export default function App() {
           fontFamily: 'monospace',
         }}
       >
-        <div>vr-al-infinite — bootstrap scaffold</div>
+        <div>vr-al-infinite — lock-on prototype (#6)</div>
         <div>WebXR: {xrSupported === null ? 'checking…' : xrSupported ? 'available' : 'not available'}</div>
+        <div style={{ marginTop: 4, opacity: 0.7 }}>Move mouse to aim · Space to fire cascade</div>
       </div>
 
       <EnterVRButton />
