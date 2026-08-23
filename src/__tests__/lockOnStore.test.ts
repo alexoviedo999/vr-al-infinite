@@ -3,6 +3,7 @@ import {
   LOCKON_CASCADE_STAGGER_MS,
   LOCKON_FILL_SECONDS,
   LOCKON_MAX_TARGETS,
+  LOCKON_RESPAWN_MS,
   useLockOnStore,
 } from '../state/lockOnStore';
 import type { LockOnTarget } from '../state/lockOnStore';
@@ -84,8 +85,28 @@ describe('lockOnStore.fire', () => {
     // yield once before reading `alive`.
     await new Promise((r) => setTimeout(r, LOCKON_CASCADE_STAGGER_MS + 5));
     expect(useLockOnStore.getState().targets[0].alive).toBe(false);
-    await new Promise((r) => setTimeout(r, ids.length * LOCKON_CASCADE_STAGGER_MS + 1500));
+    await new Promise((r) => setTimeout(r, ids.length * LOCKON_CASCADE_STAGGER_MS + LOCKON_RESPAWN_MS + 100));
     expect(useLockOnStore.getState().targets[0].alive).toBe(true);
+  });
+
+  it('re-rolls respawn position so repeated plays don\'t feel mechanical', async () => {
+    const t = useLockOnStore.getState().targets[0];
+    const originalPosition = [...t.position] as [number, number, number];
+    useLockOnStore.setState((s) => ({
+      targets: s.targets.map((u) =>
+        u.id === t.id ? { ...u, lockProgress: 1, lockedAt: performance.now() } : u,
+      ),
+    }));
+    expect(useLockOnStore.getState().fire().includes(t.id)).toBe(true);
+    await new Promise((r) => setTimeout(r, LOCKON_CASCADE_STAGGER_MS + LOCKON_RESPAWN_MS + 100));
+    const after = useLockOnStore.getState().targets.find((u) => u.id === t.id)!;
+    expect(after.alive).toBe(true);
+    // Probability that 5 re-rolls of a continuous box land back on the
+    // exact starting tuple is effectively zero. Check at least one axis
+    // moved by ≥0.05 (well above float jitter) so a partial match doesn't
+    // sneak through.
+    const moved = after.position.some((coord, i) => Math.abs(coord - originalPosition[i]) > 0.05);
+    expect(moved).toBe(true);
   });
 
   it('returns [] when nothing is locked', () => {

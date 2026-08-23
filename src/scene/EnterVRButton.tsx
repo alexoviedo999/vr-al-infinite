@@ -1,5 +1,5 @@
-import { useThree } from '@react-three/fiber';
 import { useEffect, useState } from 'react';
+import { useAppStore } from '../state/store';
 import { useWebXRSupport } from '../state/useWebXRSupport';
 
 /**
@@ -7,15 +7,18 @@ import { useWebXRSupport } from '../state/useWebXRSupport';
  * enabled, then hands the session to the R3F WebXRManager via setSession().
  * Uses the raw WebXR Device API per the locked decision in #1.
  *
- * Lives outside the Canvas so it stays a 2D HUD in screen space.
+ * Lives outside the Canvas so it stays a 2D HUD in screen space. The R3F
+ * renderer is captured at Canvas mount and exposed via `useAppStore`, so
+ * we don't need any R3F hooks here (those would throw outside the Canvas).
  */
 export function EnterVRButton() {
   const xrSupported = useWebXRSupport();
-  const gl = useThree((s) => s.gl);
+  const gl = useAppStore((s) => s.xrRenderer);
   const [isPresenting, setIsPresenting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!gl) return;
     const onStart = () => setIsPresenting(true);
     const onEnd = () => setIsPresenting(false);
     gl.xr.addEventListener('sessionstart', onStart);
@@ -27,6 +30,7 @@ export function EnterVRButton() {
   }, [gl]);
 
   if (xrSupported !== true) return null;
+  if (!gl) return null;
   if (isPresenting) return null;
 
   const enterVR = async () => {

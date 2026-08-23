@@ -14,16 +14,17 @@ export const LOCKON_FILL_SECONDS = 0.4; // time to go 0 → 1 while aim stays on
 export const LOCKON_DECAY_PER_SEC = 2.5; // rate at which lock progress bleeds off when aim leaves
 export const LOCKON_CASCADE_STAGGER_MS = 50; // ms between successive hits in the cascade
 export const LOCKON_MAX_TARGETS = 8; // Rez-style cap
+export const LOCKON_RESPAWN_MS = 1400; // held "killed" window before respawn
 
 export interface LockOnTarget {
   id: number;
-  /** World-space position. Static for the prototype. */
+  /** World-space position. Re-rolled to a fresh spot on every respawn. */
   position: [number, number, number];
   /** 0..1 — fills while aim is in cone, bleeds otherwise. */
   lockProgress: number;
   /** wall-clock ms when this target reached 1.0; null while not fully locked. Oldest-lock wins cascade. */
   lockedAt: number | null;
-  /** false after a hit; the prototype respawns after a short delay. */
+  /** false after a hit; the prototype respawns after LOCKON_RESPAWN_MS. */
   alive: boolean;
 }
 
@@ -36,6 +37,35 @@ interface LockOnState {
   /** Trigger the cascade fire. Returns the ids in fire order (oldest-lock first). */
   fire: () => number[];
 }
+
+/** Spawn-bounding box — matches the spread of the original INITIAL_TARGETS. */
+const SPAWN_X_HALF = 2.5;
+const SPAWN_Y_HALF = 1.3;
+const SPAWN_Z_MIN = -11;
+const SPAWN_Z_MAX = -6;
+const SPAWN_MIN_GAP = 1.6; // keep respawning targets from landing on each other
+
+const randomTargetPosition = (
+  existing: LockOnTarget[],
+  excludeIds: ReadonlySet<number>,
+): [number, number, number] => {
+  for (let attempt = 0; attempt < 16; attempt++) {
+    const x = (Math.random() * 2 - 1) * SPAWN_X_HALF;
+    const y = (Math.random() * 2 - 1) * SPAWN_Y_HALF;
+    const z = SPAWN_Z_MIN + Math.random() * (SPAWN_Z_MAX - SPAWN_Z_MIN);
+    const collides = existing.some(
+      (t) => excludeIds.has(t.id) || Math.hypot(t.position[0] - x, t.position[1] - y, t.position[2] - z) < SPAWN_MIN_GAP,
+    );
+    if (!collides) return [x, y, z];
+  }
+  // Couldn't find a clear spot in 16 rolls — accept whatever the last
+  // roll produced so the prototype never deadlocks.
+  return [
+    (Math.random() * 2 - 1) * SPAWN_X_HALF,
+    (Math.random() * 2 - 1) * SPAWN_Y_HALF,
+    SPAWN_Z_MIN + Math.random() * (SPAWN_Z_MAX - SPAWN_Z_MIN),
+  ];
+};
 
 const INITIAL_TARGETS: LockOnTarget[] = [
   { id: 1, position: [-2.4, 0.6, -6], lockProgress: 0, lockedAt: null, alive: true },
@@ -76,6 +106,7 @@ export const useLockOnStore = create<LockOnState>((set, get) => ({
       .targets.filter((t) => t.alive && t.lockProgress >= 1 && t.lockedAt !== null)
       .sort((a, b) => (a.lockedAt! - b.lockedAt!));
     const ids = locked.slice(0, LOCKON_MAX_TARGETS).map((t) => t.id);
+    const idSet = new Set(ids);
     // Stagger the kill so the cascade reads as a chord (Rez-style
     // "you actually scored a multi-hit" feedback), not a single pop.
     ids.forEach((id, i) => {
@@ -87,13 +118,23 @@ export const useLockOnStore = create<LockOnState>((set, get) => ({
         }));
       }, i * LOCKON_CASCADE_STAGGER_MS);
     });
-    // Respawn the whole cascade cohort together after the stagger runs
-    // out, plus a held "killed" flash window for clarity.
+    // Respawn the whole cascade cohort together with fresh positions so
+    // repeated plays don't feel mechanical (issue #6 follow-up).
     setTimeout(() => {
       set((state) => ({
-        targets: state.targets.map((t) => (ids.includes(t.id) ? { ...t, alive: true, lockProgress: 0, lockedAt: null } : t)),
+        targets: state.targets.map((t) =>
+          idSet.has(t.id)
+            ? {
+                ...t,
+                alive: true,
+                lockProgress: 0,
+                lockedAt: null,
+                position: randomTargetPosition(state.targets, idSet),
+              }
+            : t,
+        ),
       }));
-    }, ids.length * LOCKON_CASCADE_STAGGER_MS + 1400);
+    }, ids.length * LOCKON_CASCADE_STAGGER_MS + LOCKON_RESPAWN_MS);
     return ids;
   },
 }));

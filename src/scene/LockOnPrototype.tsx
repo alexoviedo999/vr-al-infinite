@@ -75,7 +75,7 @@ function TargetWithRing({ target }: { target: LockOnTarget }) {
     : lockProgress > 0
     ? '#5fd0ff'
     : '#7a8a9a';
-  const scale = target.alive ? 1 + lockProgress * 0.35 : 0.001;
+  const scale = target.alive ? 1 + lockProgress * 0.35 : 1;
   const ringOpacity = lockProgress;
 
   return (

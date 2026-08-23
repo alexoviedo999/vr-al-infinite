@@ -4,6 +4,7 @@ import { LockOnPrototype } from './scene/LockOnPrototype';
 import { Reticle } from './scene/Reticle';
 import { EnterVRButton } from './scene/EnterVRButton';
 import { useWebXRSupport } from './state/useWebXRSupport';
+import { useAppStore } from './state/store';
 
 /** Ticket #6 prototype flag — flip to false to restore the bootstrap Scene. */
 const PROTOTYPE_MODE = true;
@@ -26,6 +27,7 @@ export default function App() {
         camera={{ position: [0, 0, 5], fov: 70 }}
         onCreated={({ gl }) => {
           gl.xr.enabled = true;
+          useAppStore.getState().setXrRenderer(gl);
         }}
       >
         {PROTOTYPE_MODE ? <LockOnPrototype /> : <Scene />}
