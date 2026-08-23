@@ -2,7 +2,6 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import {
-  getSpeed,
   playerPosRef,
   playerTRef,
   tangentRef,
@@ -16,6 +15,7 @@ import {
   TOTAL_ARC_LENGTH,
 } from './spline';
 import { useLockOnStore } from '../state/lockOnStore';
+import { useTuningStore } from '../state/tuningStore';
 
 /**
  * Drives the camera along the authored spline at constant speed.
@@ -51,7 +51,7 @@ export function RailMover() {
   useFrame((_, dt) => {
     const runState = useRailStore.getState().runState;
     if (runState === 'running') {
-      const d = arcLength(playerTRef.current) + getSpeed(playerTRef.current) * dt;
+      const d = arcLength(playerTRef.current) + useTuningStore.getState().speed * dt;
       const nextT = tFromArcLength(d);
       if (nextT >= 1) {
         playerTRef.current = 1;

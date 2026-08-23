@@ -4,6 +4,7 @@ import { LockOnPrototype } from './scene/LockOnPrototype';
 import { RailPrototype } from './scene/RailPrototype';
 import { Reticle } from './scene/Reticle';
 import { EnterVRButton } from './scene/EnterVRButton';
+import { DebugPanel } from './dev/DebugPanel';
 import { useWebXRSupport } from './state/useWebXRSupport';
 import { useAppStore } from './state/store';
 
@@ -65,6 +66,7 @@ export default function App() {
       </div>
 
       <EnterVRButton />
+      {RAIL_MODE && <DebugPanel />}
     </div>
   );
 }

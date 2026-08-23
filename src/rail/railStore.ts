@@ -16,7 +16,7 @@ import { arcLength, TOTAL_ARC_LENGTH } from './spline';
  * drops in a section-driven velocity profile via this same seam.
  */
 
-export const RAIL_SPEED = 6;
+export const RAIL_SPEED = 2.5;
 
 export type RunState = 'idle' | 'running' | 'ended';
 

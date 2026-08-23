@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { TUNNEL_PIECES, type TunnelGeometrySpec } from './meshes';
 import { position, tangent } from '../rail/spline';
 import { basisAt } from '../orbs/rollingWindow';
+import { useTuningStore } from '../state/tuningStore';
 
 function createGeometry(spec: TunnelGeometrySpec): THREE.BufferGeometry {
   switch (spec.type) {
@@ -47,10 +48,16 @@ export function TunnelAlongSpline() {
   }, [pieces]);
 
   useFrame(() => {
-    for (const { mesh, piece } of pieces) {
-      const p = position(piece.anchorT);
-      const b = basisAt(piece.anchorT);
-      const tan = tangent(piece.anchorT);
+    // The first three pieces are the rings; their anchorT is live from
+    // the tuning store so the DebugPanel can re-space them. The
+    // off-axis pieces (octahedron, box) keep their authored anchorT.
+    const ringTs = useTuningStore.getState().ringAnchorTs;
+    for (let i = 0; i < pieces.length; i++) {
+      const { mesh, piece } = pieces[i];
+      const anchorT = i < 3 ? ringTs[i] : piece.anchorT;
+      const p = position(anchorT);
+      const b = basisAt(anchorT);
+      const tan = tangent(anchorT);
 
       // Position = spline point + cross-section offset.
       mesh.position.set(
