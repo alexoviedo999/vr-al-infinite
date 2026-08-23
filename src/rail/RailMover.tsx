@@ -42,6 +42,7 @@ export function RailMover() {
       arcLength,
       tFromArcLength,
     });
+    useRailStore.getState().start();
     return () => {
       useLockOnStore.getState().setSpline(null);
     };
