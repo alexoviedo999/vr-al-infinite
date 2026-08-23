@@ -2,6 +2,7 @@ import { OrbField } from '../orbs/OrbField';
 import { RailMover } from '../rail/RailMover';
 import { TunnelAlongSpline } from '../tunnel/TunnelAlongSpline';
 import { AimTracker } from './AimTracker';
+import { RailGridFloor } from './RailGridFloor';
 import { useTuningStore } from '../state/tuningStore';
 
 /**
@@ -28,6 +29,7 @@ export function RailPrototype() {
 
       <RailMover />
       <TunnelAlongSpline />
+      <RailGridFloor />
       <OrbField />
       <AimTracker />
     </>
