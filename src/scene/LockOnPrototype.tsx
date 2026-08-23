@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import * as THREE from 'three';
 import {
   useLockOnStore,
+  worldPosOf,
   type LockOnTarget,
 } from '../state/lockOnStore';
 
@@ -78,8 +79,17 @@ function TargetWithRing({ target }: { target: LockOnTarget }) {
   const scale = target.alive ? 1 + lockProgress * 0.35 : 1;
   const ringOpacity = lockProgress;
 
+  // LockOnPrototype never sets a spline on the store, so worldPosOf's
+  // fallback (offset-as-position) yields the world position. Pass a
+  // no-op basis + position so the helper short-circuits.
+  const position = worldPosOf(
+    target,
+    () => ({ right: ZERO, up: ZERO, forward: ZERO }),
+    () => ZERO,
+  );
+
   return (
-    <group position={target.position}>
+    <group position={position}>
       <mesh scale={scale}>
         <octahedronGeometry args={[0.4, 0]} />
         <meshBasicMaterial color={color} wireframe />
@@ -99,6 +109,8 @@ function TargetWithRing({ target }: { target: LockOnTarget }) {
   );
 }
 
+const ZERO = new THREE.Vector3();
+
 /**
  * Reads the mouse position, converts it to a world-space aim direction,
  * ticks the lock-on store every frame, and listens for the Space key to
@@ -111,14 +123,14 @@ function AimTracker() {
   useFrame((_, dt) => {
     const aim = new THREE.Vector3(mouse.x, mouse.y, -1);
     aim.unproject(camera).sub(camera.position).normalize();
-    tick(aim, dt, performance.now());
+    tick(aim, camera.position, dt, performance.now());
   });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'Space') return;
       e.preventDefault();
-      useLockOnStore.getState().fire();
+      useLockOnStore.getState().fire(0);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
