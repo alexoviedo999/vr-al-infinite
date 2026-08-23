@@ -74,12 +74,32 @@ interface LockOnState {
  * basis(anchorT) · offset. anchorT defaults to 0 here.
  */
 const INITIAL_TARGETS: LockOnTarget[] = [
-  { id: 1, anchorT: 0, offset: [-2.4, 0.6, -12], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 2, anchorT: 0, offset: [2.2, -0.4, -14], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 3, anchorT: 0, offset: [-0.8, 1.4, -16], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 4, anchorT: 0, offset: [0.4, -1.2, -18], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 5, anchorT: 0, offset: [1.6, 0.8, -20], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 6, anchorT: 0, offset: [-1.6, -0.8, -22], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 1, anchorT: 0, offset: [-2.4, 0.6, -6], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 2, anchorT: 0, offset: [2.2, -0.4, -7], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 3, anchorT: 0, offset: [-0.8, 1.4, -8], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 4, anchorT: 0, offset: [0.4, -1.2, -9], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 5, anchorT: 0, offset: [1.6, 0.8, -10], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 6, anchorT: 0, offset: [-1.6, -0.8, -11], lockProgress: 0, lockedAt: null, alive: true },
+];
+
+/**
+ * Arc-length-distributed initial state for rail mode. Orbs sit at
+ * anchorT values spread across the second half of the rail; the
+ * along-tangent component of `offset` is zero, lateral components
+ * stay within TUNNEL_RADIUS. Injected when setSpline is called so the
+ * fallback LockOnPrototype path keeps its tight cluster.
+ *
+ * Pushed back: first orb at t=0.45 (~13.5u ahead at 2.5 u/s), last at
+ * t=0.95 (~28.5u). Player has ~5s to orient before the first target
+ * enters engagement range.
+ */
+const INITIAL_TARGETS_RAIL: LockOnTarget[] = [
+  { id: 1, anchorT: 0.45, offset: [-2.0, 0.8, 0], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 2, anchorT: 0.55, offset: [1.8, -0.6, 0], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 3, anchorT: 0.65, offset: [-1.0, 1.4, 0], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 4, anchorT: 0.75, offset: [1.6, 0.4, 0], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 5, anchorT: 0.85, offset: [-1.4, -1.0, 0], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 6, anchorT: 0.95, offset: [0.6, 1.2, 0], lockProgress: 0, lockedAt: null, alive: true },
 ];
 
 /**
@@ -121,7 +141,11 @@ export const useLockOnStore = create<LockOnState>((set, get) => ({
 
   setSpline: (spline) => {
     if (spline) {
-      set({ spline, totalArcLength: spline.arcLength(1) });
+      set({
+        spline,
+        totalArcLength: spline.arcLength(1),
+        targets: INITIAL_TARGETS_RAIL,
+      });
     } else {
       set({ spline: null, totalArcLength: 0 });
     }
