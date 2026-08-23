@@ -1,4 +1,5 @@
 import { useTuningStore } from '../state/tuningStore';
+import { useLockOnStore } from '../state/lockOnStore';
 
 /**
  * In-canvas tuning controls. Renders alongside the HUD with the same
@@ -63,10 +64,13 @@ export function DebugPanel() {
         min={0.05}
         max={0.9}
         step={0.01}
-        onChange={setFirstOrbAnchorT}
+        onChange={(v) => {
+          setFirstOrbAnchorT(v);
+          useLockOnStore.getState().resetRailTargets();
+        }}
       />
       <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
-        Takes effect on next reload (setSpline builds initial targets)
+        Live: rebuilds initial targets on every change
       </div>
     </div>
   );

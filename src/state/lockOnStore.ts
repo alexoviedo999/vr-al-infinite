@@ -62,6 +62,7 @@ interface LockOnState {
   aimDir: THREE.Vector3;
 
   setSpline: (spline: ISpline | null) => void;
+  resetRailTargets: () => void;
   tick: (aimDir: THREE.Vector3, playerPos: THREE.Vector3, dt: number, nowMs: number) => void;
   /** Recycle orbs that have fallen behind the player (or died) to fresh anchors ahead. */
   recyclePassed: (playerArcLength: number) => void;
@@ -158,6 +159,12 @@ export const useLockOnStore = create<LockOnState>((set, get) => ({
     } else {
       set({ spline: null, totalArcLength: 0 });
     }
+  },
+
+  /** Re-populate targets from the current tuning-store lower bound. Used
+   *  by the DebugPanel when first-orb-anchor changes mid-session. */
+  resetRailTargets: () => {
+    set({ targets: buildRailInitialTargets(useTuningStore.getState().firstOrbAnchorT) });
   },
 
   tick: (aimDir, playerPos, dt, nowMs) => {
