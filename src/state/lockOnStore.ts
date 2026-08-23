@@ -7,6 +7,7 @@ import {
   worldPosOf as defaultWorldPosOf,
   type Basis,
 } from '../orbs/rollingWindow';
+import { useTuningStore } from './tuningStore';
 
 /**
  * Lock-on state for tickets #6 (cone-based lockon prototype) and #9
@@ -83,24 +84,32 @@ const INITIAL_TARGETS: LockOnTarget[] = [
 ];
 
 /**
- * Arc-length-distributed initial state for rail mode. Orbs sit at
- * anchorT values spread across the second half of the rail; the
- * along-tangent component of `offset` is zero, lateral components
- * stay within TUNNEL_RADIUS. Injected when setSpline is called so the
- * fallback LockOnPrototype path keeps its tight cluster.
- *
- * Pushed back: first orb at t=0.45 (~13.5u ahead at 2.5 u/s), last at
- * t=0.95 (~28.5u). Player has ~5s to orient before the first target
- * enters engagement range.
+ * Arc-length-distributed initial state for rail mode. Built from a
+ * configurable lower bound (read from the tuning store at setSpline
+ * time) so the DebugPanel can re-space the first orb. Lateral offsets
+ * stay within TUNNEL_RADIUS; along-tangent component is zero so orbs
+ * sit on the rail's cross-section.
  */
-const INITIAL_TARGETS_RAIL: LockOnTarget[] = [
-  { id: 1, anchorT: 0.45, offset: [-2.0, 0.8, 0], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 2, anchorT: 0.55, offset: [1.8, -0.6, 0], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 3, anchorT: 0.65, offset: [-1.0, 1.4, 0], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 4, anchorT: 0.75, offset: [1.6, 0.4, 0], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 5, anchorT: 0.85, offset: [-1.4, -1.0, 0], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 6, anchorT: 0.95, offset: [0.6, 1.2, 0], lockProgress: 0, lockedAt: null, alive: true },
+const RAIL_ORB_STEP = 0.10;
+const RAIL_ORB_OFFSETS: [number, number, number][] = [
+  [-2.0, 0.8, 0],
+  [1.8, -0.6, 0],
+  [-1.0, 1.4, 0],
+  [1.6, 0.4, 0],
+  [-1.4, -1.0, 0],
+  [0.6, 1.2, 0],
 ];
+
+function buildRailInitialTargets(firstOrbAnchorT: number): LockOnTarget[] {
+  return RAIL_ORB_OFFSETS.map((offset, i) => ({
+    id: i + 1,
+    anchorT: Math.min(0.95, firstOrbAnchorT + i * RAIL_ORB_STEP),
+    offset,
+    lockProgress: 0,
+    lockedAt: null,
+    alive: true,
+  }));
+}
 
 /**
  * Fallback respawn for the lockon-only prototype path (no spline set).
@@ -144,7 +153,7 @@ export const useLockOnStore = create<LockOnState>((set, get) => ({
       set({
         spline,
         totalArcLength: spline.arcLength(1),
-        targets: INITIAL_TARGETS_RAIL,
+        targets: buildRailInitialTargets(useTuningStore.getState().firstOrbAnchorT),
       });
     } else {
       set({ spline: null, totalArcLength: 0 });

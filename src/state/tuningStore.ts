@@ -13,10 +13,12 @@ interface TuningState {
   fogNear: number;
   fogFar: number;
   ringAnchorTs: [number, number, number];
+  firstOrbAnchorT: number;
   setSpeed: (v: number) => void;
   setFogNear: (v: number) => void;
   setFogFar: (v: number) => void;
   setRingAnchorT: (index: 0 | 1 | 2, v: number) => void;
+  setFirstOrbAnchorT: (v: number) => void;
 }
 
 export const useTuningStore = create<TuningState>((set) => ({
@@ -24,6 +26,7 @@ export const useTuningStore = create<TuningState>((set) => ({
   fogNear: 6,
   fogFar: 30,
   ringAnchorTs: [0.5, 0.8, 0.95],
+  firstOrbAnchorT: 0.45,
   setSpeed: (v) => set({ speed: v }),
   setFogNear: (v) => set({ fogNear: v }),
   setFogFar: (v) => set({ fogFar: v }),
@@ -33,4 +36,5 @@ export const useTuningStore = create<TuningState>((set) => ({
       next[index] = v;
       return { ringAnchorTs: next };
     }),
+  setFirstOrbAnchorT: (v) => set({ firstOrbAnchorT: v }),
 }));

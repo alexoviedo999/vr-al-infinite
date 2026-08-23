@@ -14,10 +14,12 @@ export function DebugPanel() {
   const fogNear = useTuningStore((s) => s.fogNear);
   const fogFar = useTuningStore((s) => s.fogFar);
   const ringTs = useTuningStore((s) => s.ringAnchorTs);
+  const firstOrbAnchorT = useTuningStore((s) => s.firstOrbAnchorT);
   const setSpeed = useTuningStore((s) => s.setSpeed);
   const setFogNear = useTuningStore((s) => s.setFogNear);
   const setFogFar = useTuningStore((s) => s.setFogFar);
   const setRingAnchorT = useTuningStore((s) => s.setRingAnchorT);
+  const setFirstOrbAnchorT = useTuningStore((s) => s.setFirstOrbAnchorT);
 
   return (
     <div
@@ -53,6 +55,19 @@ export function DebugPanel() {
           onChange={(v) => setRingAnchorT(i, v)}
         />
       ))}
+
+      <div style={{ marginTop: 6, color: '#5fd0ff' }}>orbs</div>
+      <Slider
+        label="first orb t"
+        value={firstOrbAnchorT}
+        min={0.05}
+        max={0.9}
+        step={0.01}
+        onChange={setFirstOrbAnchorT}
+      />
+      <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
+        Takes effect on next reload (setSpline builds initial targets)
+      </div>
     </div>
   );
 }
