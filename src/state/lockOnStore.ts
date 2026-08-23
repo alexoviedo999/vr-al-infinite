@@ -74,12 +74,12 @@ interface LockOnState {
  * basis(anchorT) · offset. anchorT defaults to 0 here.
  */
 const INITIAL_TARGETS: LockOnTarget[] = [
-  { id: 1, anchorT: 0, offset: [-2.4, 0.6, -6], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 2, anchorT: 0, offset: [2.2, -0.4, -7], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 3, anchorT: 0, offset: [-0.8, 1.4, -8], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 4, anchorT: 0, offset: [0.4, -1.2, -9], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 5, anchorT: 0, offset: [1.6, 0.8, -10], lockProgress: 0, lockedAt: null, alive: true },
-  { id: 6, anchorT: 0, offset: [-1.6, -0.8, -11], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 1, anchorT: 0, offset: [-2.4, 0.6, -12], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 2, anchorT: 0, offset: [2.2, -0.4, -14], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 3, anchorT: 0, offset: [-0.8, 1.4, -16], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 4, anchorT: 0, offset: [0.4, -1.2, -18], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 5, anchorT: 0, offset: [1.6, 0.8, -20], lockProgress: 0, lockedAt: null, alive: true },
+  { id: 6, anchorT: 0, offset: [-1.6, -0.8, -22], lockProgress: 0, lockedAt: null, alive: true },
 ];
 
 /**
