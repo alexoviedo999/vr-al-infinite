@@ -1,11 +1,14 @@
 import { Canvas } from '@react-three/fiber';
 import { Scene } from './scene/Scene';
 import { LockOnPrototype } from './scene/LockOnPrototype';
+import { RailPrototype } from './scene/RailPrototype';
 import { Reticle } from './scene/Reticle';
 import { EnterVRButton } from './scene/EnterVRButton';
 import { useWebXRSupport } from './state/useWebXRSupport';
 import { useAppStore } from './state/store';
 
+/** Ticket #9 rail flag — flip to false to fall back to PROTOTYPE_MODE (lockon) or Scene (bootstrap). */
+const RAIL_MODE = true;
 /** Ticket #6 prototype flag — flip to false to restore the bootstrap Scene. */
 const PROTOTYPE_MODE = true;
 
@@ -30,10 +33,10 @@ export default function App() {
           useAppStore.getState().setXrRenderer(gl);
         }}
       >
-        {PROTOTYPE_MODE ? <LockOnPrototype /> : <Scene />}
+        {RAIL_MODE ? <RailPrototype /> : PROTOTYPE_MODE ? <LockOnPrototype /> : <Scene />}
       </Canvas>
 
-      {PROTOTYPE_MODE && <Reticle />}
+      {RAIL_MODE ? null : PROTOTYPE_MODE ? <Reticle /> : null}
 
       <div
         style={{
@@ -49,7 +52,14 @@ export default function App() {
           fontFamily: 'monospace',
         }}
       >
-        <div>vr-al-infinite — lock-on prototype (#6)</div>
+        <div>
+          vr-al-infinite —{' '}
+          {RAIL_MODE
+            ? 'rail motion prototype (#9)'
+            : PROTOTYPE_MODE
+            ? 'lock-on prototype (#6)'
+            : 'bootstrap'}
+        </div>
         <div>WebXR: {xrSupported === null ? 'checking…' : xrSupported ? 'available' : 'not available'}</div>
         <div style={{ marginTop: 4, opacity: 0.7 }}>Move mouse to aim · Space to fire cascade</div>
       </div>
