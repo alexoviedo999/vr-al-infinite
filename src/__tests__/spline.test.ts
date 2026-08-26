@@ -1,12 +1,20 @@
 import * as THREE from 'three';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   arcLength,
   position,
   tangent,
   tFromArcLength,
-  TOTAL_ARC_LENGTH,
+  getTotalArcLength,
+  setControlPoints,
 } from '../rail/spline';
 import { CONTROL_POINTS } from '../rail/points';
+
+// Spline state is mutable (setControlPoints rebuilds segments + arc-table).
+// Each test starts from the authored baseline so prior tests don't leak.
+beforeEach(() => {
+  setControlPoints(CONTROL_POINTS);
+});
 
 describe('spline.position', () => {
   it('returns the first control point at t=0', () => {
@@ -33,9 +41,9 @@ describe('spline.tangent', () => {
 });
 
 describe('spline.arcLength', () => {
-  it('returns 0 at t=0 and TOTAL_ARC_LENGTH at t=1', () => {
+  it('returns 0 at t=0 and getTotalArcLength() at t=1', () => {
     expect(arcLength(0)).toBe(0);
-    expect(arcLength(1)).toBeCloseTo(TOTAL_ARC_LENGTH, 6);
+    expect(arcLength(1)).toBeCloseTo(getTotalArcLength(), 6);
   });
 
   it('is monotonically non-decreasing across the 256-entry sample grid', () => {
@@ -59,23 +67,23 @@ describe('spline.tFromArcLength', () => {
     }
   });
 
-  it('returns 0 at d=0 and 1 at d=TOTAL_ARC_LENGTH', () => {
+  it('returns 0 at d=0 and 1 at d=getTotalArcLength()', () => {
     expect(tFromArcLength(0)).toBe(0);
-    expect(tFromArcLength(TOTAL_ARC_LENGTH)).toBe(1);
+    expect(tFromArcLength(getTotalArcLength())).toBe(1);
   });
 
-  it('clamps below 0 to 0 and above TOTAL_ARC_LENGTH to 1', () => {
+  it('clamps below 0 to 0 and above getTotalArcLength() to 1', () => {
     expect(tFromArcLength(-1)).toBe(0);
-    expect(tFromArcLength(TOTAL_ARC_LENGTH + 100)).toBe(1);
+    expect(tFromArcLength(getTotalArcLength() + 100)).toBe(1);
   });
 });
 
 describe('spline integration sanity', () => {
-  it('TOTAL_ARC_LENGTH is positive and bounded', () => {
+  it('getTotalArcLength() is positive and bounded', () => {
     // 5 points spanning -30 units along z; should be roughly 30-35 units
     // (the x/y wobble adds a small amount of extra distance).
-    expect(TOTAL_ARC_LENGTH).toBeGreaterThan(30);
-    expect(TOTAL_ARC_LENGTH).toBeLessThan(40);
+    expect(getTotalArcLength()).toBeGreaterThan(30);
+    expect(getTotalArcLength()).toBeLessThan(40);
   });
 
   it('returns Vector3 instances with finite coordinates', () => {
@@ -84,5 +92,57 @@ describe('spline integration sanity', () => {
     expect(Number.isFinite(p.x)).toBe(true);
     expect(Number.isFinite(p.y)).toBe(true);
     expect(Number.isFinite(p.z)).toBe(true);
+  });
+});
+
+describe('spline.setControlPoints — runtime rebuild', () => {
+  const straight = [
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, -10),
+    new THREE.Vector3(0, 0, -20),
+    new THREE.Vector3(0, 0, -30),
+  ];
+
+  it('rebuilds segments so position(0) reflects the new first control point', () => {
+    const newFirst = new THREE.Vector3(5, 5, 0);
+    setControlPoints([newFirst, ...straight.slice(1)]);
+    const p = position(0);
+    expect(p.x).toBeCloseTo(newFirst.x, 6);
+    expect(p.y).toBeCloseTo(newFirst.y, 6);
+    expect(p.z).toBeCloseTo(newFirst.z, 6);
+  });
+
+  it('updates getTotalArcLength() to match the new curve', () => {
+    const beforeTotal = getTotalArcLength();
+    // Straight -z line of length 30: arc length should be exactly 30.
+    setControlPoints(straight);
+    const afterTotal = getTotalArcLength();
+    expect(beforeTotal).not.toBe(afterTotal);
+    expect(afterTotal).toBeCloseTo(30, 1);
+  });
+
+  it('arcLength(1) follows the rebuild', () => {
+    setControlPoints(straight);
+    expect(arcLength(1)).toBeCloseTo(getTotalArcLength(), 6);
+  });
+
+  it('tFromArcLength still clamps to 1 at the new total', () => {
+    setControlPoints(straight);
+    expect(tFromArcLength(getTotalArcLength())).toBe(1);
+    expect(tFromArcLength(getTotalArcLength() + 100)).toBe(1);
+  });
+
+  it('throws when fewer than 4 control points are provided', () => {
+    expect(() => setControlPoints([new THREE.Vector3(), new THREE.Vector3()])).toThrow();
+    expect(() => setControlPoints([new THREE.Vector3()])).toThrow();
+  });
+
+  it('round-trip still holds after a rebuild', () => {
+    setControlPoints(straight);
+    for (const t of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+      const d = arcLength(t);
+      const tBack = tFromArcLength(d);
+      expect(tBack).toBeCloseTo(t, 3);
+    }
   });
 });
