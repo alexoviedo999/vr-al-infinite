@@ -94,6 +94,9 @@ export function DebugPanel() {
         onChange={setSectionCurvatureScale}
       />
       <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
+        Default 0.03 — keep at 0 to avoid Catmull-Rom knot wobble
+      </div>
+      <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
         Scales every section's curvature (#10)
       </div>
 

@@ -56,14 +56,18 @@ export interface MusicMap {
  * with different tangent directions), which reads as a small back-
  * and-forth jerk on the rail even at low magnitudes.
  *
- * Curvature magnitudes are very small — order 0.05–0.15 units in a
+ * Curvature magnitudes are very small — order 0.006–0.019 units in a
  * tunnel of radius 3 — and the DebugPanel `sectionCurvatureScale`
- * slider runs 0 → 0.15 with 0.005 steps so the user can dial the
- * effective offsets in the 0–0.023 range. At RAIL_SPEED = 2.5 u/s
- * the effect should read as subtle motion parallax / perspective
- * shift, not as a roller-coaster bend. The slider's upper bound is
- * the practical max; anything beyond it reads as a wobble even at
- * the existing section curvatures.
+ * slider defaults to 0.03 (was 0.15; reduced because the user
+ * reported the previous defaults still felt like a roller coaster).
+ * Effective per-axis offsets at default scale are ~0.0002–0.0006,
+ * which is in practice a no-op — the curvature injection is kept in
+ * place so an essentia-driven MusicMap can supply real values later,
+ * not for any visible effect at the current defaults. The Catmull-Rom
+ * knot wobble at any extra control point is structural (twists
+ * tangent direction at neighbouring knots), so any non-zero
+ * inflection produces SOME jerk regardless of magnitude — keep the
+ * slider at 0 for a truly smooth ride.
  *
  * Each section adds a different axis of "psychedelic lift" matching
  * the rez-clone pitch and the canonical section names in issue #10.
@@ -97,9 +101,9 @@ export interface MusicMap {
 export class MockMusicMap implements MusicMap {
   sections(): readonly SectionBoundary[] {
     return [
-      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3( 0.0,  0.05, 0), velocity: 0.6 },
-      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3( 0.15, -0.05, 0), velocity: 1.4 },
-      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(-0.10,  0.04, 0), velocity: 0.8 },
+      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3( 0.0,    0.006, 0), velocity: 0.6 },
+      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3( 0.019, -0.006, 0), velocity: 1.4 },
+      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(-0.0125, 0.005, 0), velocity: 0.8 },
     ];
   }
 }
