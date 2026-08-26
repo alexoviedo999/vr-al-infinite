@@ -17,8 +17,10 @@ import * as THREE from 'three';
 export type SectionName = 'intro' | 'build' | 'drop' | 'breakdown' | 'outro';
 
 /** A section boundary: where to insert an inflection into the rail
- *  (startT) and the curvature applied in the cross-section basis at
- *  that t (right = +x, up = +y, forward = +z along tangent). */
+ *  (startT), the curvature applied in the cross-section basis at
+ *  that t (right = +x, up = +y, forward = +z along tangent), and the
+ *  velocity multiplier that scales the rail's base speed while the
+ *  player is inside this section (startT ≤ t < next section's startT). */
 export interface SectionBoundary {
   name: SectionName;
   /** Parameter t ∈ [0, 1] where the section begins. */
@@ -27,6 +29,9 @@ export interface SectionBoundary {
    *  should stay within `TUNNEL_RADIUS = 3` to keep orbs inside the
    *  tunnel envelope. */
   curvature: THREE.Vector3;
+  /** Velocity multiplier applied while inside this section. 1.0 is
+   *  the base speed; 0.6 = 60% of base, 1.4 = 140% of base. */
+  velocity: number;
 }
 
 /** Interface implemented by anything that produces section boundaries
@@ -75,6 +80,14 @@ export interface MusicMap {
  *   - drop      — +X lateral whip, the explosive moment
  *   - breakdown — -X pull back to neutral, relaxation
  *
+ * Velocity profile (#12): each section also carries a multiplier
+ * that scales the rail's base speed while the player is inside it.
+ * Rez-style — intro is slow (anticipation), drop is fastest (the
+ * rush), breakdown is medium (exhale). Step-function transitions:
+ * the multiplier snaps to the next section's value at its startT.
+ * Default base speed is 2.5 u/s, so the effective speeds are 1.5
+ * (intro), 3.5 (drop), 2.0 (breakdown).
+ *
  * The boundary ordering, names, and curvature are illustrative and
  * will be replaced by essentia-driven values once that pipeline
  * lands (filed as issue #14).
@@ -82,9 +95,9 @@ export interface MusicMap {
 export class MockMusicMap implements MusicMap {
   sections(): readonly SectionBoundary[] {
     return [
-      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3( 0.0,  0.05, 0) },
-      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3( 0.15, -0.05, 0) },
-      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(-0.10,  0.04, 0) },
+      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3( 0.0,  0.05, 0), velocity: 0.6 },
+      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3( 0.15, -0.05, 0), velocity: 1.4 },
+      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(-0.10,  0.04, 0), velocity: 0.8 },
     ];
   }
 }

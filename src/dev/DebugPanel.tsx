@@ -18,6 +18,7 @@ export function DebugPanel() {
   const firstOrbAnchorT = useTuningStore((s) => s.firstOrbAnchorT);
   const musicMapEnabled = useTuningStore((s) => s.musicMapEnabled);
   const sectionCurvatureScale = useTuningStore((s) => s.sectionCurvatureScale);
+  const velocityProfileEnabled = useTuningStore((s) => s.velocityProfileEnabled);
   const setSpeed = useTuningStore((s) => s.setSpeed);
   const setFogNear = useTuningStore((s) => s.setFogNear);
   const setFogFar = useTuningStore((s) => s.setFogFar);
@@ -25,6 +26,7 @@ export function DebugPanel() {
   const setFirstOrbAnchorT = useTuningStore((s) => s.setFirstOrbAnchorT);
   const setMusicMapEnabled = useTuningStore((s) => s.setMusicMapEnabled);
   const setSectionCurvatureScale = useTuningStore((s) => s.setSectionCurvatureScale);
+  const setVelocityProfileEnabled = useTuningStore((s) => s.setVelocityProfileEnabled);
 
   return (
     <div
@@ -93,6 +95,16 @@ export function DebugPanel() {
       />
       <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
         Scales every section's curvature (#10)
+      </div>
+
+      <div style={{ marginTop: 6, color: '#5fd0ff' }}>velocity profile</div>
+      <Checkbox
+        label="section velocity on"
+        checked={velocityProfileEnabled}
+        onChange={setVelocityProfileEnabled}
+      />
+      <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
+        intro 0.6 / drop 1.4 / breakdown 0.8 (#12)
       </div>
     </div>
   );

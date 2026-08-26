@@ -50,6 +50,13 @@ describe('MockMusicMap', () => {
     }
   });
 
+  it('every section carries a finite, non-negative velocity multiplier (#12)', () => {
+    for (const s of map.sections()) {
+      expect(Number.isFinite(s.velocity)).toBe(true);
+      expect(s.velocity).toBeGreaterThanOrEqual(0);
+    }
+  });
+
   it('returns a fresh array each call (consumer mutation is safe)', () => {
     const a = map.sections();
     const b = map.sections();

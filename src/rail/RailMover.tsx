@@ -19,6 +19,7 @@ import { useTuningStore } from '../state/tuningStore';
 import { CONTROL_POINTS } from './points';
 import { MockMusicMap } from './musicMap';
 import { injectSectionInflections } from './sectionInflection';
+import { velocityAt } from './sectionVelocity';
 
 const SPLINE_API = {
   position,
@@ -26,6 +27,12 @@ const SPLINE_API = {
   arcLength,
   tFromArcLength,
 };
+
+// Cached section list for the per-frame velocity lookup (#12).
+// MockMusicMap.sections() returns a fresh array each call (the test
+// asserts this), but the rail doesn't mutate it, so caching a single
+// reference here is safe and avoids per-frame allocation.
+const SECTIONS = new MockMusicMap().sections();
 
 /**
  * Drives the camera along the rail spline at constant speed.
@@ -79,7 +86,15 @@ export function RailMover() {
   useFrame((_, dt) => {
     const runState = useRailStore.getState().runState;
     if (runState === 'running') {
-      const d = arcLength(playerTRef.current) + useTuningStore.getState().speed * dt;
+      const tuning = useTuningStore.getState();
+      const baseSpeed = tuning.speed;
+      // Section-driven velocity profile (#12): when enabled, the rail
+      // moves at baseSpeed × section.velocity while inside each Music
+      // Map section. Falls back to baseSpeed when disabled.
+      const speed = tuning.velocityProfileEnabled
+        ? velocityAt(playerTRef.current, SECTIONS, baseSpeed)
+        : baseSpeed;
+      const d = arcLength(playerTRef.current) + speed * dt;
       const nextT = tFromArcLength(d);
       if (nextT >= 1) {
         playerTRef.current = 1;
