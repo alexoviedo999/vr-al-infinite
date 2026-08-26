@@ -66,17 +66,13 @@ export function RailMover() {
     };
   }, []);
 
-  // React to the music-map-enabled toggle AND the curvature-scale
-  // slider. Each rebuild re-publishes the ISpline so the lockon
-  // store's `spline` selector picks up the new closures (Zustand
-  // re-renders subscribers only on reference change, which the
-  // fresh object literal guarantees).
+  // React to the music-map-enabled toggle. Each rebuild re-publishes
+  // the ISpline so the lockon store's `spline` selector picks up the
+  // new closures (Zustand re-renders subscribers only on reference
+  // change, which the fresh object literal guarantees).
   useEffect(() => {
     const unsub = useTuningStore.subscribe((s, prev) => {
-      if (
-        s.musicMapEnabled !== prev.musicMapEnabled ||
-        s.sectionCurvatureScale !== prev.sectionCurvatureScale
-      ) {
+      if (s.musicMapEnabled !== prev.musicMapEnabled) {
         applyRailForMusicMapFlag(s.musicMapEnabled);
       }
     });
@@ -122,19 +118,20 @@ export function RailMover() {
 /**
  * Sets the active control points and re-publishes the ISpline to the
  * lockon store. When `enabled` is true, the augmented list (base +
- * section-boundary inflection points) is installed, scaled by the
- * current `sectionCurvatureScale` from the tuning store; otherwise
- * the bare authored CONTROL_POINTS are restored. The lockon store's
- * setSpline re-caches totalArcLength and rebuilds initial orb
- * targets — fine for feel debugging; not for live gameplay.
+ * section-boundary inflection points) is installed; otherwise the
+ * bare authored CONTROL_POINTS are restored. MockMusicMap currently
+ * ships with every curvature at zero, so the augmented list is
+ * functionally equivalent to the base list — the call is kept so a
+ * future essentia-driven MusicMap (#14) can supply real curvatures
+ * without touching RailMover. The lockon store's setSpline re-caches
+ * totalArcLength and rebuilds initial orb targets — fine for feel
+ * debugging; not for live gameplay.
  */
 function applyRailForMusicMapFlag(enabled: boolean): void {
-  const tuning = useTuningStore.getState();
   const points = enabled
     ? injectSectionInflections(
         CONTROL_POINTS,
         new MockMusicMap().sections(),
-        tuning.sectionCurvatureScale,
       )
     : CONTROL_POINTS;
   setControlPoints(points);

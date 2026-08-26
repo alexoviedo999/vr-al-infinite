@@ -17,7 +17,6 @@ export function DebugPanel() {
   const ringTs = useTuningStore((s) => s.ringAnchorTs);
   const firstOrbAnchorT = useTuningStore((s) => s.firstOrbAnchorT);
   const musicMapEnabled = useTuningStore((s) => s.musicMapEnabled);
-  const sectionCurvatureScale = useTuningStore((s) => s.sectionCurvatureScale);
   const velocityProfileEnabled = useTuningStore((s) => s.velocityProfileEnabled);
   const setSpeed = useTuningStore((s) => s.setSpeed);
   const setFogNear = useTuningStore((s) => s.setFogNear);
@@ -25,7 +24,6 @@ export function DebugPanel() {
   const setRingAnchorT = useTuningStore((s) => s.setRingAnchorT);
   const setFirstOrbAnchorT = useTuningStore((s) => s.setFirstOrbAnchorT);
   const setMusicMapEnabled = useTuningStore((s) => s.setMusicMapEnabled);
-  const setSectionCurvatureScale = useTuningStore((s) => s.setSectionCurvatureScale);
   const setVelocityProfileEnabled = useTuningStore((s) => s.setVelocityProfileEnabled);
 
   return (
@@ -81,23 +79,13 @@ export function DebugPanel() {
 
       <div style={{ marginTop: 6, color: '#5fd0ff' }}>music map</div>
       <Checkbox
-        label="section curvature on"
+        label="music map on"
         checked={musicMapEnabled}
         onChange={setMusicMapEnabled}
       />
-      <Slider
-        label="curvature"
-        value={sectionCurvatureScale}
-        min={0}
-        max={0.15}
-        step={0.005}
-        onChange={setSectionCurvatureScale}
-      />
       <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
-        Default 0.03 — keep at 0 to avoid Catmull-Rom knot wobble
-      </div>
-      <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
-        Scales every section's curvature (#10)
+        Drives the velocity profile (#12). Curvature seam is in code
+        but ships empty — see MockMusicMap (#10).
       </div>
 
       <div style={{ marginTop: 6, color: '#5fd0ff' }}>velocity profile</div>

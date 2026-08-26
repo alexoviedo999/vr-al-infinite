@@ -19,7 +19,6 @@ interface TuningState {
   ringAnchorTs: [number, number, number];
   firstOrbAnchorT: number;
   musicMapEnabled: boolean;
-  sectionCurvatureScale: number;
   velocityProfileEnabled: boolean;
   setSpeed: (v: number) => void;
   setFogNear: (v: number) => void;
@@ -27,7 +26,6 @@ interface TuningState {
   setRingAnchorT: (index: 0 | 1 | 2, v: number) => void;
   setFirstOrbAnchorT: (v: number) => void;
   setMusicMapEnabled: (v: boolean) => void;
-  setSectionCurvatureScale: (v: number) => void;
   setVelocityProfileEnabled: (v: boolean) => void;
 }
 
@@ -38,7 +36,6 @@ export const useTuningStore = create<TuningState>((set) => ({
   ringAnchorTs: [0.5, 0.8, 0.95],
   firstOrbAnchorT: 0.7,
   musicMapEnabled: true,
-  sectionCurvatureScale: 0.03,
   velocityProfileEnabled: true,
   setSpeed: (v) => set({ speed: v }),
   setFogNear: (v) => set({ fogNear: v }),
@@ -51,6 +48,5 @@ export const useTuningStore = create<TuningState>((set) => ({
     }),
   setFirstOrbAnchorT: (v) => set({ firstOrbAnchorT: v }),
   setMusicMapEnabled: (v) => set({ musicMapEnabled: v }),
-  setSectionCurvatureScale: (v) => set({ sectionCurvatureScale: v }),
   setVelocityProfileEnabled: (v) => set({ velocityProfileEnabled: v }),
 }));
