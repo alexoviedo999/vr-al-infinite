@@ -41,17 +41,39 @@ export interface MusicMap {
  * longer Track until the essentia.js pipeline lands. Section
  * boundaries are spaced roughly into the middle half of the rail so
  * the bend falls inside the tunnel envelope and feels visually
- * distinct from the authored 5-point shape. Curvature magnitudes are
- * small — the DebugPanel exposes a `sectionCurvatureScale` slider
- * (default 0.5) so the user can dial them at runtime. The Catmull-Rom
- * through the augmented control-point list creates C1 curvature
- * discontinuities at each knot; even modest magnitudes can read as a
- * "rough roller coaster" at RAIL_SPEED = 2.5 u/s, so start gentle
- * and let the user dial up if they want more drama. Each section
- * adds a different axis of "psychedelic lift" — intro drifts +Y
- * gently, build lifts +Y, drop drifts +X, breakdown pulls -X back
- * to neutral — matching the rez-clone pitch and the four canonical
- * section names in issue #10.
+ * distinct from the authored 5-point shape.
+ *
+ * Each boundary sits BETWEEN two base control points (not on top of
+ * one) — the base spline has 5 control points at t = {0, 0.25, 0.5,
+ * 0.75, 1}, so boundaries at 0.10 / 0.30 / 0.55 / 0.80 all land in
+ * a clear segment. An inflection that coincides with a base control
+ * point creates a C1 knot wobble in the Catmull-Rom (two close knots
+ * with different tangent directions), which reads as a small back-
+ * and-forth jerk on the rail even at low magnitudes.
+ *
+ * Curvature magnitudes are very small — order 0.05–0.15 units in a
+ * tunnel of radius 3 — and the DebugPanel `sectionCurvatureScale`
+ * slider defaults to 0.15 so the effective offsets stay in the
+ * 0.01–0.03 range. At RAIL_SPEED = 2.5 u/s the effect should read as
+ * subtle motion parallax / perspective shift, not as a roller-coaster
+ * bend. Users who want more drama can dial the slider up.
+ *
+ * Each section adds a different axis of "psychedelic lift" matching
+ * the rez-clone pitch and the canonical section names in issue #10.
+ * Only sections that sit in regions where their offset *aligns* with
+ * the natural base curve are injected — adding an extra Catmull-Rom
+ * knot in a region of strong natural curvature creates a tangent-
+ * direction twist at the neighbouring knots, which reads as a small
+ * jerk in the cabin motion regardless of magnitude. Intro, drop,
+ * and breakdown all align; build would not (the natural curve rises
+ * through t∈[0.25, 0.5] from y=0.4 to y=0.8, so a +Y inflection there
+ * fights the rise), so it is omitted from the mock. The `build`
+ * SectionName is still part of the type so a real essentia-driven
+ * MusicMap can supply one when its track analysis warrants it.
+ *
+ *   - intro     — gentle +Y drift, anticipation
+ *   - drop      — +X lateral whip, the explosive moment
+ *   - breakdown — -X pull back to neutral, relaxation
  *
  * The boundary ordering, names, and curvature are illustrative and
  * will be replaced by essentia-driven values once that pipeline
@@ -60,10 +82,9 @@ export interface MusicMap {
 export class MockMusicMap implements MusicMap {
   sections(): readonly SectionBoundary[] {
     return [
-      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3( 0.0,  0.15, 0) },
-      { name: 'build',     startT: 0.25, curvature: new THREE.Vector3( 0.0,  0.35, 0) },
-      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3( 0.45, -0.15, 0) },
-      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(-0.30,  0.10, 0) },
+      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3( 0.0,  0.05, 0) },
+      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3( 0.15, -0.05, 0) },
+      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(-0.10,  0.04, 0) },
     ];
   }
 }

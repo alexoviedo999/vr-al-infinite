@@ -36,7 +36,7 @@ export const useTuningStore = create<TuningState>((set) => ({
   ringAnchorTs: [0.5, 0.8, 0.95],
   firstOrbAnchorT: 0.7,
   musicMapEnabled: true,
-  sectionCurvatureScale: 0.5,
+  sectionCurvatureScale: 0.15,
   setSpeed: (v) => set({ speed: v }),
   setFogNear: (v) => set({ fogNear: v }),
   setFogFar: (v) => set({ fogFar: v }),
