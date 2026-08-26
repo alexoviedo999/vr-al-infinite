@@ -2,15 +2,29 @@ import { OrbField } from '../orbs/OrbField';
 import { RailMover } from '../rail/RailMover';
 import { TunnelAlongSpline } from '../tunnel/TunnelAlongSpline';
 import { AimTracker } from './AimTracker';
+import { Avatar } from './Avatar';
 import { RailGridFloor } from './RailGridFloor';
 import { useTuningStore } from '../state/tuningStore';
 
 /**
- * Forward-rail motion prototype for ticket #9.
+ * Forward-rail motion prototype for ticket #9, with the avatar rig
+ * from ticket #11.
  *
- * Render order matters: RailMover writes the camera pose every frame
- * so TunnelAlongSpline, OrbField, and AimTracker all read a current
- * player position. R3F runs useFrame callbacks in render-tree order.
+ * Render order matters: R3F runs useFrame callbacks in render-tree
+ * order, so the components here are mounted in the order they need
+ * to run each frame:
+ *
+ *   1. RailMover        — writes playerPosRef + tangentRef
+ *   2. TunnelAlongSpline — reads ring anchors, places tunnel meshes
+ *   3. RailGridFloor    — reads playerPosRef.{x,z}, places grid
+ *   4. OrbField         — pure JSX, no useFrame
+ *   5. Avatar           — reads playerPosRef + tangentRef, writes camera
+ *   6. AimTracker       — reads camera (fresh from Avatar) for mouse ray
+ *
+ * Mounting Avatar before AimTracker guarantees AimTracker reads a
+ * camera position that was written this frame. In VR, gl.xr replaces
+ * the camera matrices in the render pipeline after useFrame — Avatar's
+ * writes are harmless there.
  *
  * Fog distances come from the tuning store; RailMover reads speed
  * and TunnelAlongSpline reads ring anchor positions from the same
@@ -31,6 +45,7 @@ export function RailPrototype() {
       <TunnelAlongSpline />
       <RailGridFloor />
       <OrbField />
+      <Avatar />
       <AimTracker />
     </>
   );

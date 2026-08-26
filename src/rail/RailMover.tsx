@@ -1,6 +1,5 @@
-import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo } from 'react';
-import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
+import { useEffect } from 'react';
 import {
   playerPosRef,
   playerTRef,
@@ -35,7 +34,9 @@ const SPLINE_API = {
 const SECTIONS = new MockMusicMap().sections();
 
 /**
- * Drives the camera along the rail spline at constant speed.
+ * Drives the rail at section-velocity speed (#12) and publishes the
+ * player pose (position + tangent) each frame for downstream consumers
+ * (`RailGridFloor`, `AimTracker`, `Avatar`).
  *
  * On mount: builds the active control-point set from CONTROL_POINTS
  * (with section-boundary inflection points injected if the Music Map
@@ -47,16 +48,12 @@ const SECTIONS = new MockMusicMap().sections();
  * (augmented vs base) and the lockon store is re-published so the
  * `OrbField` Zustand subscriber picks up the new closures.
  *
- * Runs FIRST in the JSX (before TunnelAlongSpline, OrbField, AimTracker)
- * so the per-frame playerT write wins; R3F runs useFrame callbacks in
- * render-tree order. The camera write is harmless during a VR session
- * — R3F's XR pipeline replaces it before render — but it's the source
- * of truth on desktop.
+ * Runs FIRST in the JSX (before TunnelAlongSpline, RailGridFloor,
+ * OrbField, Avatar, AimTracker) so the per-frame playerT write wins;
+ * R3F runs useFrame callbacks in render-tree order. The camera is no
+ * longer written here — `Avatar` owns the camera now (#11).
  */
 export function RailMover() {
-  const { camera } = useThree();
-  const _up = useMemo(() => new THREE.Vector3(0, 1, 0), []);
-
   useEffect(() => {
     applyRailForMusicMapFlag(useTuningStore.getState().musicMapEnabled);
     useRailStore.getState().start();
@@ -106,10 +103,6 @@ export function RailMover() {
     const t = tangent(playerTRef.current);
     playerPosRef.current.copy(p);
     tangentRef.current.copy(t);
-
-    camera.position.copy(p);
-    camera.up.copy(_up);
-    camera.lookAt(p.x + t.x, p.y + t.y, p.z + t.z);
   });
 
   return null;
