@@ -101,21 +101,6 @@ function speed(t: number): number {
 
 // Cumulative arc-length lookup. arcTable[i] = arc length at t = i / ARC_TABLE_SIZE.
 // Built per control-point set via trapezoidal integration of |tangent| over uniform samples.
-let arcTable: number[] = (() => {
-  const table = new Array<number>(ARC_TABLE_SIZE + 1);
-  table[0] = 0;
-  let prevSpeed = speed(0);
-  for (let i = 1; i <= ARC_TABLE_SIZE; i++) {
-    const t = i / ARC_TABLE_SIZE;
-    const curSpeed = speed(t);
-    const dt = 1 / ARC_TABLE_SIZE;
-    table[i] = table[i - 1] + ((prevSpeed + curSpeed) * dt) / 2;
-    prevSpeed = curSpeed;
-  }
-  return table;
-})();
-let totalArcLength: number = arcTable[ARC_TABLE_SIZE];
-
 function buildArcTable(): number[] {
   const table = new Array<number>(ARC_TABLE_SIZE + 1);
   table[0] = 0;
@@ -129,6 +114,9 @@ function buildArcTable(): number[] {
   }
   return table;
 }
+
+let arcTable: number[] = buildArcTable();
+let totalArcLength: number = arcTable[ARC_TABLE_SIZE];
 
 /**
  * Replace the active control-point set. Rebuilds the Catmull-Rom
