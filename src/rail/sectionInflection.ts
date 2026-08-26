@@ -42,13 +42,18 @@ function indexBefore(baseLength: number, t: number): number {
  *   - startT ≤ 0 or startT ≥ 1 (out of curve)
  *   - curvature magnitude < 1e-9 (degenerate / no bend)
  *
- * The returned array is a fresh allocation; the input `base` is not
- * mutated.
+ * `curvatureScale` multiplies every boundary's curvature vector
+ * before application; 0 disables section curvature entirely (returns
+ * a copy of `base`). The returned array is a fresh allocation; the
+ * input `base` is not mutated.
  */
 export function injectSectionInflections(
   base: readonly THREE.Vector3[],
   boundaries: readonly SectionBoundary[],
+  curvatureScale = 1,
 ): THREE.Vector3[] {
+  if (curvatureScale === 0) return [...base];
+
   const augmented: THREE.Vector3[] = [...base];
 
   const sorted = boundaries
@@ -66,9 +71,9 @@ export function injectSectionInflections(
     _scratchUp.crossVectors(_scratchTan, _scratchRight).normalize();
     const inflection = new THREE.Vector3()
       .copy(anchor)
-      .addScaledVector(_scratchRight, b.curvature.x)
-      .addScaledVector(_scratchUp, b.curvature.y)
-      .addScaledVector(_scratchTan, b.curvature.z);
+      .addScaledVector(_scratchRight, b.curvature.x * curvatureScale)
+      .addScaledVector(_scratchUp,   b.curvature.y * curvatureScale)
+      .addScaledVector(_scratchTan,  b.curvature.z * curvatureScale);
     const idx = indexBefore(base.length, b.startT);
     augmented.splice(idx, 0, inflection);
   }

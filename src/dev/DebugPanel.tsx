@@ -17,12 +17,14 @@ export function DebugPanel() {
   const ringTs = useTuningStore((s) => s.ringAnchorTs);
   const firstOrbAnchorT = useTuningStore((s) => s.firstOrbAnchorT);
   const musicMapEnabled = useTuningStore((s) => s.musicMapEnabled);
+  const sectionCurvatureScale = useTuningStore((s) => s.sectionCurvatureScale);
   const setSpeed = useTuningStore((s) => s.setSpeed);
   const setFogNear = useTuningStore((s) => s.setFogNear);
   const setFogFar = useTuningStore((s) => s.setFogFar);
   const setRingAnchorT = useTuningStore((s) => s.setRingAnchorT);
   const setFirstOrbAnchorT = useTuningStore((s) => s.setFirstOrbAnchorT);
   const setMusicMapEnabled = useTuningStore((s) => s.setMusicMapEnabled);
+  const setSectionCurvatureScale = useTuningStore((s) => s.setSectionCurvatureScale);
 
   return (
     <div
@@ -81,8 +83,16 @@ export function DebugPanel() {
         checked={musicMapEnabled}
         onChange={setMusicMapEnabled}
       />
+      <Slider
+        label="curvature"
+        value={sectionCurvatureScale}
+        min={0}
+        max={2}
+        step={0.05}
+        onChange={setSectionCurvatureScale}
+      />
       <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
-        A/B the augmented vs bare rail shape (#10)
+        Scales every section's curvature (#10)
       </div>
     </div>
   );

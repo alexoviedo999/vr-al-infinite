@@ -41,14 +41,17 @@ export interface MusicMap {
  * longer Track until the essentia.js pipeline lands. Section
  * boundaries are spaced roughly into the middle half of the rail so
  * the bend falls inside the tunnel envelope and feels visually
- * distinct from the authored 5-point shape. Curvatures are tuned
- * for a gentle ride at RAIL_SPEED = 2.5 u/s — sharp bends cause the
- * camera to whip through the inflection (confirmed on desktop); the
- * values below keep the angular velocity under ~10°/s through each
- * bend. Each section adds a different axis of "psychedelic lift" —
- * intro drifts +Y gently, build lifts +Y, drop drifts +X, breakdown
- * pulls -X back to neutral — matching the rez-clone pitch and the
- * four canonical section names in issue #10.
+ * distinct from the authored 5-point shape. Curvature magnitudes are
+ * small — the DebugPanel exposes a `sectionCurvatureScale` slider
+ * (default 0.5) so the user can dial them at runtime. The Catmull-Rom
+ * through the augmented control-point list creates C1 curvature
+ * discontinuities at each knot; even modest magnitudes can read as a
+ * "rough roller coaster" at RAIL_SPEED = 2.5 u/s, so start gentle
+ * and let the user dial up if they want more drama. Each section
+ * adds a different axis of "psychedelic lift" — intro drifts +Y
+ * gently, build lifts +Y, drop drifts +X, breakdown pulls -X back
+ * to neutral — matching the rez-clone pitch and the four canonical
+ * section names in issue #10.
  *
  * The boundary ordering, names, and curvature are illustrative and
  * will be replaced by essentia-driven values once that pipeline
@@ -57,10 +60,10 @@ export interface MusicMap {
 export class MockMusicMap implements MusicMap {
   sections(): readonly SectionBoundary[] {
     return [
-      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3( 0.0,  0.3, 0) },
-      { name: 'build',     startT: 0.25, curvature: new THREE.Vector3( 0.0,  0.7, 0) },
-      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3( 0.9, -0.3, 0) },
-      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(-0.6,  0.2, 0) },
+      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3( 0.0,  0.15, 0) },
+      { name: 'build',     startT: 0.25, curvature: new THREE.Vector3( 0.0,  0.35, 0) },
+      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3( 0.45, -0.15, 0) },
+      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(-0.30,  0.10, 0) },
     ];
   }
 }
