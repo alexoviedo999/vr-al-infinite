@@ -58,10 +58,12 @@ export interface MusicMap {
  *
  * Curvature magnitudes are very small — order 0.05–0.15 units in a
  * tunnel of radius 3 — and the DebugPanel `sectionCurvatureScale`
- * slider defaults to 0.15 so the effective offsets stay in the
- * 0.01–0.03 range. At RAIL_SPEED = 2.5 u/s the effect should read as
- * subtle motion parallax / perspective shift, not as a roller-coaster
- * bend. Users who want more drama can dial the slider up.
+ * slider runs 0 → 0.15 with 0.005 steps so the user can dial the
+ * effective offsets in the 0–0.023 range. At RAIL_SPEED = 2.5 u/s
+ * the effect should read as subtle motion parallax / perspective
+ * shift, not as a roller-coaster bend. The slider's upper bound is
+ * the practical max; anything beyond it reads as a wobble even at
+ * the existing section curvatures.
  *
  * Each section adds a different axis of "psychedelic lift" matching
  * the rez-clone pitch and the canonical section names in issue #10.

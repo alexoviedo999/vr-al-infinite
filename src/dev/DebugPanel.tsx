@@ -89,8 +89,8 @@ export function DebugPanel() {
         label="curvature"
         value={sectionCurvatureScale}
         min={0}
-        max={2}
-        step={0.05}
+        max={0.15}
+        step={0.005}
         onChange={setSectionCurvatureScale}
       />
       <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
