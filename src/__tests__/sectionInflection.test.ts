@@ -80,9 +80,11 @@ describe('injectSectionInflections — single boundary', () => {
       .addScaledVector(upN, curv.y)
       .addScaledVector(tan, curv.z);
 
-    // indexBefore(5, 0.5) = round(2) = 2, so the inflection is spliced
-    // before base[2], landing at out[2].
-    const inserted = out[2];
+    // indexAfter(5, 0.5) = floor(2) + 1 = 3, so the inflection is spliced
+    // AFTER base[2], landing at out[3]. (The old "round + insert before"
+    // formula landed at out[2], which caused the rail to loop back at the
+    // start when applied to small startT values.)
+    const inserted = out[3];
     expect(inserted.x).toBeCloseTo(expected.x, 6);
     expect(inserted.y).toBeCloseTo(expected.y, 6);
     expect(inserted.z).toBeCloseTo(expected.z, 6);

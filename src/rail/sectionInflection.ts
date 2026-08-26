@@ -23,14 +23,22 @@ const _scratchUp = new THREE.Vector3();
 const _worldUp = new THREE.Vector3(0, 1, 0);
 
 /**
- * Map a parameter t ∈ [0, 1] to the index in the base array that
- * should PRECEDE the inserted inflection. base[0] ↔ t=0; base[N-1] ↔
- * t=1; insertion at index i puts the new point between base[i-1] and
- * base[i].
+ * Map a parameter t ∈ (0, 1) to the splice index that places the
+ * inserted inflection AFTER the closest base point. base[0] ↔ t=0,
+ * base[N-1] ↔ t=1; the inflection at t belongs between base[k] and
+ * base[k+1] where k = floor(t * (N-1)). The function returns k + 1,
+ * clamped to [1, N-1] (startT ≤ 0 and startT ≥ 1 are filtered before
+ * this is called, so the clamp is just defensive).
+ *
+ * Note: using `round` here would put the inflection BEFORE base[k],
+ * which for t slightly greater than 0 lands the inflection ahead of
+ * base[0]. Catmull-Rom then loops back to base[0] on the first
+ * segment, producing the "roller-coaster" wobble at the start of the
+ * rail.
  */
-function indexBefore(baseLength: number, t: number): number {
-  const i = Math.round(t * (baseLength - 1));
-  return Math.max(0, Math.min(baseLength - 1, i));
+function indexAfter(baseLength: number, t: number): number {
+  const i = Math.floor(t * (baseLength - 1)) + 1;
+  return Math.max(1, Math.min(baseLength - 1, i));
 }
 
 /**
@@ -74,7 +82,7 @@ export function injectSectionInflections(
       .addScaledVector(_scratchRight, b.curvature.x * curvatureScale)
       .addScaledVector(_scratchUp,   b.curvature.y * curvatureScale)
       .addScaledVector(_scratchTan,  b.curvature.z * curvatureScale);
-    const idx = indexBefore(base.length, b.startT);
+    const idx = indexAfter(base.length, b.startT);
     augmented.splice(idx, 0, inflection);
   }
 
