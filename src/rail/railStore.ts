@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
-import { arcLength, TOTAL_ARC_LENGTH } from './spline';
+import { arcLength } from './spline';
 
 /**
  * Rail runtime state for ticket #9. Splits into two layers:
@@ -51,5 +51,3 @@ export function getSpeed(_t: number): number {
 export function getPlayerArcLength(): number {
   return arcLength(playerTRef.current);
 }
-
-export { TOTAL_ARC_LENGTH };

@@ -16,11 +16,15 @@ export function DebugPanel() {
   const fogFar = useTuningStore((s) => s.fogFar);
   const ringTs = useTuningStore((s) => s.ringAnchorTs);
   const firstOrbAnchorT = useTuningStore((s) => s.firstOrbAnchorT);
+  const musicMapEnabled = useTuningStore((s) => s.musicMapEnabled);
+  const velocityProfileEnabled = useTuningStore((s) => s.velocityProfileEnabled);
   const setSpeed = useTuningStore((s) => s.setSpeed);
   const setFogNear = useTuningStore((s) => s.setFogNear);
   const setFogFar = useTuningStore((s) => s.setFogFar);
   const setRingAnchorT = useTuningStore((s) => s.setRingAnchorT);
   const setFirstOrbAnchorT = useTuningStore((s) => s.setFirstOrbAnchorT);
+  const setMusicMapEnabled = useTuningStore((s) => s.setMusicMapEnabled);
+  const setVelocityProfileEnabled = useTuningStore((s) => s.setVelocityProfileEnabled);
 
   return (
     <div
@@ -72,6 +76,27 @@ export function DebugPanel() {
       <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
         Live: rebuilds initial targets on every change
       </div>
+
+      <div style={{ marginTop: 6, color: '#5fd0ff' }}>music map</div>
+      <Checkbox
+        label="music map on"
+        checked={musicMapEnabled}
+        onChange={setMusicMapEnabled}
+      />
+      <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
+        Drives the velocity profile (#12). Curvature seam is in code
+        but ships empty — see MockMusicMap (#10).
+      </div>
+
+      <div style={{ marginTop: 6, color: '#5fd0ff' }}>velocity profile</div>
+      <Checkbox
+        label="section velocity on"
+        checked={velocityProfileEnabled}
+        onChange={setVelocityProfileEnabled}
+      />
+      <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
+        intro 0.6 / drop 1.4 / breakdown 0.8 (#12)
+      </div>
     </div>
   );
 }
@@ -104,6 +129,27 @@ function Slider({
         style={{ flex: 1 }}
       />
       <span style={{ width: 36, textAlign: 'right' }}>{value.toFixed(2)}</span>
+    </label>
+  );
+}
+
+function Checkbox({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '2px 0' }}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span style={{ color: '#7a8a9a' }}>{label}</span>
     </label>
   );
 }

@@ -7,6 +7,10 @@ import { create } from 'zustand';
  *
  * Defaults match the authored feel: slow enough to aim, fog rolls in
  * around the next landmark, three rings spaced for a steady rhythm.
+ *
+ * `musicMapEnabled` (#10) gates whether the rail spline is augmented
+ * with section-boundary inflection points from the Music Map. When
+ * off, the rail is the bare authored 5-point curve (CONTROL_POINTS).
  */
 interface TuningState {
   speed: number;
@@ -14,11 +18,15 @@ interface TuningState {
   fogFar: number;
   ringAnchorTs: [number, number, number];
   firstOrbAnchorT: number;
+  musicMapEnabled: boolean;
+  velocityProfileEnabled: boolean;
   setSpeed: (v: number) => void;
   setFogNear: (v: number) => void;
   setFogFar: (v: number) => void;
   setRingAnchorT: (index: 0 | 1 | 2, v: number) => void;
   setFirstOrbAnchorT: (v: number) => void;
+  setMusicMapEnabled: (v: boolean) => void;
+  setVelocityProfileEnabled: (v: boolean) => void;
 }
 
 export const useTuningStore = create<TuningState>((set) => ({
@@ -27,6 +35,8 @@ export const useTuningStore = create<TuningState>((set) => ({
   fogFar: 30,
   ringAnchorTs: [0.5, 0.8, 0.95],
   firstOrbAnchorT: 0.7,
+  musicMapEnabled: true,
+  velocityProfileEnabled: true,
   setSpeed: (v) => set({ speed: v }),
   setFogNear: (v) => set({ fogNear: v }),
   setFogFar: (v) => set({ fogFar: v }),
@@ -37,4 +47,6 @@ export const useTuningStore = create<TuningState>((set) => ({
       return { ringAnchorTs: next };
     }),
   setFirstOrbAnchorT: (v) => set({ firstOrbAnchorT: v }),
+  setMusicMapEnabled: (v) => set({ musicMapEnabled: v }),
+  setVelocityProfileEnabled: (v) => set({ velocityProfileEnabled: v }),
 }));
