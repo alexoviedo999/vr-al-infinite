@@ -62,7 +62,9 @@ export default function App() {
             : 'bootstrap'}
         </div>
         <div>WebXR: {xrSupported === null ? 'checking…' : xrSupported ? 'available' : 'not available'}</div>
-        <div style={{ marginTop: 4, opacity: 0.7 }}>Move mouse to aim · Space to fire cascade</div>
+        <div style={{ marginTop: 4, opacity: 0.7 }}>
+          Move mouse to aim · Space / trigger to fire cascade
+        </div>
       </div>
 
       <EnterVRButton />
