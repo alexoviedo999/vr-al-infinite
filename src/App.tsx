@@ -5,8 +5,10 @@ import { RailPrototype } from './scene/RailPrototype';
 import { Reticle } from './scene/Reticle';
 import { EnterVRButton } from './scene/EnterVRButton';
 import { DebugPanel } from './dev/DebugPanel';
+import { CascadeChimes } from './scene/CascadeChimes';
 import { useWebXRSupport } from './state/useWebXRSupport';
 import { useAppStore } from './state/store';
+import { useLockOnStore } from './state/lockOnStore';
 
 /** Ticket #9 rail flag — flip to false to fall back to PROTOTYPE_MODE (lockon) or Scene (bootstrap). */
 const RAIL_MODE = true;
@@ -15,6 +17,7 @@ const PROTOTYPE_MODE = true;
 
 export default function App() {
   const xrSupported = useWebXRSupport();
+  const lastCascade = useLockOnStore((s) => s.lastCascade);
 
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#000' }}>
@@ -37,7 +40,8 @@ export default function App() {
         {RAIL_MODE ? <RailPrototype /> : PROTOTYPE_MODE ? <LockOnPrototype /> : <Scene />}
       </Canvas>
 
-      {RAIL_MODE ? null : PROTOTYPE_MODE ? <Reticle /> : null}
+      {(RAIL_MODE || PROTOTYPE_MODE) && <Reticle />}
+      <CascadeChimes />
 
       <div
         style={{
@@ -56,7 +60,7 @@ export default function App() {
         <div>
           vr-al-infinite —{' '}
           {RAIL_MODE
-            ? 'rail motion prototype (#9)'
+            ? 'rail + avatar + shoot'
             : PROTOTYPE_MODE
             ? 'lock-on prototype (#6)'
             : 'bootstrap'}
@@ -65,6 +69,11 @@ export default function App() {
         <div style={{ marginTop: 4, opacity: 0.7 }}>
           Move mouse to aim · Space / trigger to fire cascade
         </div>
+        {lastCascade && lastCascade.ids.length > 0 && (
+          <div style={{ marginTop: 4, color: '#5fd0ff' }}>
+            cascade ×{lastCascade.ids.length}
+          </div>
+        )}
       </div>
 
       <EnterVRButton />

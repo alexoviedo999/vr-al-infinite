@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbField } from '../orbs/OrbField';
 import { AimTracker } from './AimTracker';
+import { CascadeFlash } from './CascadeFlash';
 
 /**
  * Lock-on feel prototype for ticket #6.
@@ -25,6 +26,7 @@ export function LockOnPrototype() {
 
       <TunnelStub />
       <OrbField />
+      <CascadeFlash />
       <AimTracker />
     </>
   );

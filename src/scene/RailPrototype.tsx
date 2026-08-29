@@ -3,6 +3,7 @@ import { RailMover } from '../rail/RailMover';
 import { TunnelAlongSpline } from '../tunnel/TunnelAlongSpline';
 import { AimTracker } from './AimTracker';
 import { Avatar } from './Avatar';
+import { CascadeFlash } from './CascadeFlash';
 import { RailGridFloor } from './RailGridFloor';
 import { useTuningStore } from '../state/tuningStore';
 
@@ -46,6 +47,7 @@ export function RailPrototype() {
       <RailGridFloor />
       <OrbField />
       <Avatar />
+      <CascadeFlash />
       <AimTracker />
     </>
   );

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { describe, it, expect } from 'vitest';
 import { MockMusicMap, type SectionName } from '../rail/musicMap';
+import { RealMusicMap } from '../audio/RealMusicMap';
+import type { SerializedMusicMap } from '../audio/sectionFromAnalysis';
 
 const VALID_NAMES: ReadonlySet<SectionName> = new Set([
   'intro',
@@ -61,5 +63,27 @@ describe('MockMusicMap', () => {
     const a = map.sections();
     const b = map.sections();
     expect(a).not.toBe(b);
+  });
+});
+
+describe('RealMusicMap', () => {
+  const serialized: SerializedMusicMap = {
+    trackId: 'test-track',
+    durationSec: 120,
+    bpm: 122,
+    beats: [0, 0.5, 1],
+    sections: [
+      { name: 'intro', startT: 0.1, velocity: 0.6, curvature: [0, 0, 0] },
+      { name: 'drop', startT: 0.5, velocity: 1.4, curvature: [0, 0, 0] },
+    ],
+  };
+
+  it('implements MusicMap from a serialized worker artifact', () => {
+    const real = new RealMusicMap(serialized);
+    const sections = real.sections();
+    expect(sections).toHaveLength(2);
+    expect(sections[1].name).toBe('drop');
+    expect(sections[1].curvature).toBeInstanceOf(THREE.Vector3);
+    expect(real.sections()).not.toBe(sections);
   });
 });
