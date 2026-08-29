@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import type { MusicalKey } from '../audio/chimeScale';
+import { DEFAULT_KEY } from '../audio/chimeScale';
 
 /**
  * Music Map - the seam that the essentia.js pipeline will satisfy in a
@@ -45,6 +47,8 @@ export interface MusicMap {
   beats(): readonly number[];
   /** Track length in seconds; used to map rail t → playhead. */
   durationSec(): number;
+  /** Estimated key for diatonic Chimes. */
+  key(): MusicalKey;
 }
 
 /**
@@ -93,5 +97,9 @@ export class MockMusicMap implements MusicMap {
 
   durationSec(): number {
     return 60;
+  }
+
+  key(): MusicalKey {
+    return { ...DEFAULT_KEY };
   }
 }

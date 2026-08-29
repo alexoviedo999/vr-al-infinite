@@ -1,6 +1,7 @@
 import { useTuningStore } from '../state/tuningStore';
 import { useLockOnStore } from '../state/lockOnStore';
 import { useMusicMapStore } from '../state/musicMapStore';
+import { formatKey } from '../audio/chimeScale';
 import { extractMusicMap } from '../audio/extractMusicMap';
 import { useEffect } from 'react';
 
@@ -30,6 +31,7 @@ export function DebugPanel() {
   const mapError = useMusicMapStore((s) => s.error);
   const mapSource = useMusicMapStore((s) => s.sourceName);
   const mapBpm = useMusicMapStore((s) => s.bpm);
+  const mapKey = useMusicMapStore((s) => s.key);
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get('analyse');
@@ -133,9 +135,10 @@ export function DebugPanel() {
       </button>
       <div style={{ marginTop: 4, opacity: 0.7, fontSize: 10 }}>
         {mapStatus === 'extracting' && `analysing ${mapSource ?? ''}…`}
-        {mapStatus === 'ready' && `map ready: ${mapSource} · ${mapBpm.toFixed(1)} bpm`}
+        {mapStatus === 'ready' &&
+          `map ready: ${mapSource} · ${mapBpm.toFixed(1)} bpm · ${formatKey(mapKey)}`}
+        {mapStatus === 'idle' && `mock map · ${formatKey(mapKey)}`}
         {mapStatus === 'error' && `error: ${mapError}`}
-        {mapStatus === 'idle' && 'mock map (upload to replace)'}
       </div>
     </div>
   );

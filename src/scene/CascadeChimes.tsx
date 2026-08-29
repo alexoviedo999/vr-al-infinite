@@ -1,14 +1,17 @@
 import { useEffect } from 'react';
-import { delayToNextBeat } from '../audio/sectionFromAnalysis';
+import { cascadeChordHz } from '../audio/chimeScale';
 import { playChime } from '../audio/playChime';
+import { delayToNextBeat } from '../audio/sectionFromAnalysis';
 import { playerTRef } from '../rail/railStore';
-import { LOCKON_CASCADE_STAGGER_MS } from '../state/lockOnStore';
 import { useLockOnStore } from '../state/lockOnStore';
 import { useMusicMapStore } from '../state/musicMapStore';
 
+/** Voices of a chord land on the same beat, 12ms apart — Rez "chord-ish". */
+const CHORD_VOICE_MS = 12;
+
 /**
- * Plays a Chime per locked orb, quantized to the next beat on the
- * active Music Map's Beat Grid, then staggered 50ms for the chord.
+ * Beat-grid quantized musical Chimes: cascade size becomes a diatonic
+ * chord in the Track's key, scheduled on the next beat.
  */
 export function CascadeChimes() {
   const lastCascade = useLockOnStore((s) => s.lastCascade);
@@ -17,9 +20,10 @@ export function CascadeChimes() {
     if (!lastCascade || lastCascade.ids.length === 0) return;
     const map = useMusicMapStore.getState();
     const nowSec = playerTRef.current * map.durationSec;
-    const quantize = delayToNextBeat(nowSec, map.beats);
-    lastCascade.ids.forEach((_, i) => {
-      playChime(i, quantize + (i * LOCKON_CASCADE_STAGGER_MS) / 1000);
+    const onBeat = delayToNextBeat(nowSec, map.beats);
+    const freqs = cascadeChordHz(lastCascade.ids.length, map.key);
+    freqs.forEach((hz, i) => {
+      playChime(hz, onBeat + (i * CHORD_VOICE_MS) / 1000);
     });
   }, [lastCascade]);
 

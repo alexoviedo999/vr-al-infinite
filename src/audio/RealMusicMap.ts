@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { MusicMap, SectionBoundary } from '../rail/musicMap';
+import { parseKey, type MusicalKey } from './chimeScale';
 import type { SerializedMusicMap } from './sectionFromAnalysis';
 
 /**
@@ -24,5 +25,9 @@ export class RealMusicMap implements MusicMap {
 
   durationSec(): number {
     return this.serialized.durationSec;
+  }
+
+  key(): MusicalKey {
+    return parseKey(this.serialized.key.tonic, this.serialized.key.mode);
   }
 }

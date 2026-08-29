@@ -31,11 +31,17 @@ export interface SerializedSection {
   curvature: [number, number, number];
 }
 
+export interface SerializedKey {
+  tonic: string;
+  mode: 'major' | 'minor';
+}
+
 export interface SerializedMusicMap {
   trackId: string;
   durationSec: number;
   bpm: number;
   beats: number[];
+  key: SerializedKey;
   sections: SerializedSection[];
 }
 
@@ -133,13 +139,6 @@ function dedupeIncreasing(sections: SerializedSection[]): SerializedSection[] {
     }
   }
   return out.length > 0 ? out : FALLBACK.map((s) => ({ ...s }));
-}
-
-/** A minor pentatonic, A3 upward. Cascade index 0 is the oldest lock. */
-const CHIME_HZ = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
-
-export function chimeFrequency(cascadeIndex: number): number {
-  return CHIME_HZ[((cascadeIndex % CHIME_HZ.length) + CHIME_HZ.length) % CHIME_HZ.length];
 }
 
 /**

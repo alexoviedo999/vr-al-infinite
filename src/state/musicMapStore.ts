@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { MockMusicMap, type MusicMap } from '../rail/musicMap';
+import { DEFAULT_KEY, parseKey, type MusicalKey } from '../audio/chimeScale';
 import { RealMusicMap } from '../audio/RealMusicMap';
 import type { SerializedMusicMap } from '../audio/sectionFromAnalysis';
 
@@ -16,6 +17,7 @@ interface MusicMapState {
   beats: readonly number[];
   durationSec: number;
   bpm: number;
+  key: MusicalKey;
   setExtracting: (sourceName: string) => void;
   setReady: (serialized: SerializedMusicMap) => void;
   setError: (error: string) => void;
@@ -30,6 +32,7 @@ export const useMusicMapStore = create<MusicMapState>((set) => ({
   beats: MOCK.beats(),
   durationSec: MOCK.durationSec(),
   bpm: 120,
+  key: { ...DEFAULT_KEY },
   setExtracting: (sourceName) =>
     set({ status: 'extracting', error: null, sourceName }),
   setReady: (serialized) =>
@@ -41,6 +44,7 @@ export const useMusicMapStore = create<MusicMapState>((set) => ({
       beats: serialized.beats,
       durationSec: serialized.durationSec,
       bpm: serialized.bpm,
+      key: parseKey(serialized.key.tonic, serialized.key.mode),
     }),
   setError: (error) => set({ status: 'error', error }),
   resetToMock: () =>
@@ -52,5 +56,6 @@ export const useMusicMapStore = create<MusicMapState>((set) => ({
       beats: MOCK.beats(),
       durationSec: MOCK.durationSec(),
       bpm: 120,
+      key: { ...DEFAULT_KEY },
     }),
 }));
