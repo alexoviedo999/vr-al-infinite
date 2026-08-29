@@ -8,9 +8,8 @@ function audioCtx(): AudioContext {
 }
 
 /**
- * Placeholder Chime: a short pentatonic beep. Not beat-aligned yet
- * (needs the Beat Grid from #14 during a Run). Synthesis, not decode,
- * so this may live on the main thread.
+ * Placeholder Chime: a short pentatonic beep. CascadeChimes quantizes
+ * `whenSec` onto the active Music Map Beat Grid. Synthesis, not decode.
  */
 export function playChime(cascadeIndex: number, whenSec = 0): void {
   const ac = audioCtx();

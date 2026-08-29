@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   chimeFrequency,
+  delayToNextBeat,
   sectionsFromEnergy,
   type EnergyWindow,
 } from '../audio/sectionFromAnalysis';
@@ -34,7 +35,8 @@ describe('sectionsFromEnergy', () => {
     }
     const drop = sections.find((s) => s.name === 'drop');
     expect(drop?.velocity).toBe(1.4);
-    expect(drop?.curvature).toEqual([0, 0, 0]);
+    expect(drop?.curvature[0]).toBeLessThan(0);
+    expect(Math.hypot(...drop!.curvature)).toBeLessThanOrEqual(3);
   });
 
   it('falls back to a three-section mock shape when energy is empty', () => {
@@ -56,6 +58,23 @@ describe('sectionsFromEnergy', () => {
     );
     const ts = sections.map((s) => s.startT);
     expect(new Set(ts).size).toBe(ts.length);
+  });
+});
+
+describe('delayToNextBeat', () => {
+  const beats = [0, 0.5, 1, 1.5, 2];
+
+  it('returns the wait until the next beat when it is soon', () => {
+    expect(delayToNextBeat(0.4, beats)).toBeCloseTo(0.1, 5);
+  });
+
+  it('plays immediately when the next beat is further than maxWait', () => {
+    expect(delayToNextBeat(0.4, beats, 0.05)).toBe(0);
+  });
+
+  it('returns 0 with no beats or past the last beat', () => {
+    expect(delayToNextBeat(0.2, [])).toBe(0);
+    expect(delayToNextBeat(9, beats)).toBe(0);
   });
 });
 

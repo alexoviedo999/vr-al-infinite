@@ -6,9 +6,9 @@ import type { SectionName } from '../rail/musicMap';
  * windows here so section labelling stays unit-testable without WASM.
  *
  * Section names and velocity multipliers match CONTEXT.md / MockMusicMap:
- * intro slow, drop fastest, breakdown medium. Curvature stays [0,0,0]
- * until a later ticket maps audio into the spline (Catmull-Rom jerks
- * at any extra knot — see MockMusicMap).
+ * intro slow, drop fastest, breakdown medium. Curvature is a visual-only
+ * lateral offset for tunnel meshes — it is NOT injected into the
+ * Catmull-Rom (that jerks the camera; see MockMusicMap).
  */
 
 export const SECTION_VELOCITY: Record<SectionName, number> = {
@@ -45,12 +45,32 @@ const FALLBACK: SerializedSection[] = [
   section('breakdown', 0.8),
 ];
 
-function section(name: SectionName, startT: number): SerializedSection {
+/** Lateral visual warp (right, up, forward). Magnitudes stay < tunnel radius. */
+export function curvatureForSection(
+  name: SectionName,
+  intensity = 0.6,
+): [number, number, number] {
+  const mag = 0.25 + Math.min(1, Math.max(0, intensity)) * 1.0;
+  switch (name) {
+    case 'intro':
+      return [mag * 0.45, mag * 0.12, 0];
+    case 'build':
+      return [mag * 0.7, mag * 0.2, 0];
+    case 'drop':
+      return [-mag, mag * 0.28, 0];
+    case 'breakdown':
+      return [mag * 0.5, -mag * 0.18, 0];
+    case 'outro':
+      return [mag * 0.2, 0, 0];
+  }
+}
+
+function section(name: SectionName, startT: number, intensity = 0.6): SerializedSection {
   return {
     name,
     startT,
     velocity: SECTION_VELOCITY[name],
-    curvature: [0, 0, 0],
+    curvature: curvatureForSection(name, intensity),
   };
 }
 
@@ -73,12 +93,17 @@ export function sectionsFromEnergy(
   const last = windows[windows.length - 1];
   const lastT = clamp01(last.startSec / durationSec);
 
-  const drafted: SerializedSection[] = [section('intro', Math.min(0.08, Math.max(0.02, dropT * 0.15)))];
+  const peakRms = peak.rms || 1;
+  const drafted: SerializedSection[] = [
+    section('intro', Math.min(0.08, Math.max(0.02, dropT * 0.15)), windows[0].rms / peakRms),
+  ];
 
   if (dropT > drafted[0].startT + 0.12) {
-    drafted.push(section('build', (drafted[0].startT + dropT) / 2));
+    drafted.push(section('build', (drafted[0].startT + dropT) / 2, 0.7));
   }
-  drafted.push(section('drop', Math.max(drafted[drafted.length - 1].startT + 0.05, dropT)));
+  drafted.push(
+    section('drop', Math.max(drafted[drafted.length - 1].startT + 0.05, dropT), 1),
+  );
 
   if (lastT > drafted[drafted.length - 1].startT + 0.1 && last.rms < peak.rms * 0.7) {
     drafted.push(
@@ -115,4 +140,24 @@ const CHIME_HZ = [220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
 
 export function chimeFrequency(cascadeIndex: number): number {
   return CHIME_HZ[((cascadeIndex % CHIME_HZ.length) + CHIME_HZ.length) % CHIME_HZ.length];
+}
+
+/**
+ * Seconds to wait so a Chime lands on the next beat. If the next beat
+ * is further than `maxWaitSec`, play immediately — laggy quantization
+ * is worse than being slightly off-grid (see psychedelic-lift.md).
+ */
+export function delayToNextBeat(
+  nowSec: number,
+  beats: readonly number[],
+  maxWaitSec = 0.35,
+): number {
+  if (beats.length === 0) return 0;
+  for (const beat of beats) {
+    if (beat + 1e-4 >= nowSec) {
+      const delay = beat - nowSec;
+      return delay > maxWaitSec ? 0 : Math.max(0, delay);
+    }
+  }
+  return 0;
 }

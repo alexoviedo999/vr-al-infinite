@@ -1,6 +1,6 @@
 # The Psychedelic Lift
 
-Proposed brief for [#8](https://github.com/alexoviedo999/vr-al-infinite/issues/8). Derived from the #7 visual baseline (not a live grilling session). Reopen #8 if any axis should be thrown out.
+Working spec for [#8](https://github.com/alexoviedo999/vr-al-infinite/issues/8), taken from the #7 visual baseline. First three prototype-now items are implemented on this branch: section colour temperature, visual-only tunnel inflections, Beat-Grid Chimes. Reopen #8 to throw an axis out.
 
 vr-al-infinite stays a wireframe cyberspace tunnel in one neon hue. The lift is not "more particles" — it is the same scene becoming a literal reading of the Music Map and of the player's lock-on cascade, in ways Rez does not.
 

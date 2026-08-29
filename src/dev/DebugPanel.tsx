@@ -2,6 +2,7 @@ import { useTuningStore } from '../state/tuningStore';
 import { useLockOnStore } from '../state/lockOnStore';
 import { useMusicMapStore } from '../state/musicMapStore';
 import { extractMusicMap } from '../audio/extractMusicMap';
+import { useEffect } from 'react';
 
 /**
  * In-canvas tuning controls. Renders alongside the HUD with the same
@@ -28,6 +29,14 @@ export function DebugPanel() {
   const mapStatus = useMusicMapStore((s) => s.status);
   const mapError = useMusicMapStore((s) => s.error);
   const mapSource = useMusicMapStore((s) => s.sourceName);
+  const mapBpm = useMusicMapStore((s) => s.bpm);
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('analyse');
+    if (q === 'stressed') {
+      void analyseUrl('/demo-tracks/dj-deep-stressed.aiff', 'dj-deep-stressed');
+    }
+  }, []);
 
   return (
     <div
@@ -124,7 +133,7 @@ export function DebugPanel() {
       </button>
       <div style={{ marginTop: 4, opacity: 0.7, fontSize: 10 }}>
         {mapStatus === 'extracting' && `analysing ${mapSource ?? ''}…`}
-        {mapStatus === 'ready' && `map ready: ${mapSource}`}
+        {mapStatus === 'ready' && `map ready: ${mapSource} · ${mapBpm.toFixed(1)} bpm`}
         {mapStatus === 'error' && `error: ${mapError}`}
         {mapStatus === 'idle' && 'mock map (upload to replace)'}
       </div>

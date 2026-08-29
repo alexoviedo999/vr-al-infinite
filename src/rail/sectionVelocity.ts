@@ -24,16 +24,24 @@ import type { SectionBoundary } from './musicMap';
  * the ticket body. A step function keeps the rhythm in time with
  * discrete beats and matches how Rez-style games typically ship v1.
  */
+export function sectionAt(
+  t: number,
+  sections: readonly SectionBoundary[],
+): SectionBoundary | null {
+  if (sections.length === 0) return null;
+  let current = sections[0];
+  for (const s of sections) {
+    if (s.startT <= t) current = s;
+    else break;
+  }
+  return current;
+}
+
 export function velocityAt(
   t: number,
   sections: readonly SectionBoundary[],
   baseSpeed: number,
 ): number {
-  if (sections.length === 0) return baseSpeed;
-  let currentVelocity = sections[0].velocity;
-  for (const s of sections) {
-    if (s.startT <= t) currentVelocity = s.velocity;
-    else break;
-  }
-  return baseSpeed * currentVelocity;
+  const section = sectionAt(t, sections);
+  return section ? baseSpeed * section.velocity : baseSpeed;
 }

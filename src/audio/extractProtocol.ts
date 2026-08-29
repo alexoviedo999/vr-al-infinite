@@ -1,7 +1,10 @@
 import type { SerializedMusicMap } from './sectionFromAnalysis';
 
 export interface ExtractRequest {
-  buffer: ArrayBuffer;
+  /** Mono PCM. Transferred to the worker; do not reuse after postMessage. */
+  samples: Float32Array;
+  sampleRate: number;
+  durationSec: number;
   name: string;
 }
 

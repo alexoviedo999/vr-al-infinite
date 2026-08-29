@@ -17,4 +17,12 @@ export class RealMusicMap implements MusicMap {
       curvature: new THREE.Vector3(s.curvature[0], s.curvature[1], s.curvature[2]),
     }));
   }
+
+  beats(): readonly number[] {
+    return this.serialized.beats.slice();
+  }
+
+  durationSec(): number {
+    return this.serialized.durationSec;
+  }
 }

@@ -15,9 +15,16 @@ const ARM_SHOULDER_X = 0.18; // outer edge of torso
 const BODY_COLOR = '#5fd0ff'; // matches lockon rings / debug accents
 const TORSO_COLOR = '#1d3a5f'; // muted; matches the tunnel mesh palette
 
+// Desktop chase cam: sit behind/above the figure so the full silhouette
+// reads. First-person-from-the-head hid the body (and put tunnel
+// octahedra in the player's face). VR still overwrites this via gl.xr.
+const CAM_BACK = 2.8;
+const CAM_HEIGHT = 1.85;
+const LOOK_AHEAD = 5;
+const LOOK_HEIGHT = 1.1;
+
 // Scratch + up vectors. Allocated once, never inside useFrame — keeps the
 // per-frame path allocation-free (per the Quest 3 perf note in docs/).
-const _tmpVec = new THREE.Vector3();
 const _up = new THREE.Vector3(0, 1, 0);
 
 /**
@@ -33,8 +40,8 @@ const _up = new THREE.Vector3(0, 1, 0);
  *   - Reads `playerPosRef` and `tangentRef` from `railStore` (published by
  *     `RailMover`). Renders BEFORE this in `RailPrototype`, so the refs are
  *     fresh.
- *   - Writes the camera position/up/lookAt. In VR, `gl.xr` overwrites the
- *     camera matrices in the render pipeline AFTER this useFrame — harmless.
+ *   - Writes a chase camera (behind/above the figure). In VR, `gl.xr`
+ *     overwrites the camera matrices AFTER this useFrame — harmless.
  *
  * Head-tracking math: `headGroup` lives inside `avatarGroup`, so its world
  * rotation is `avatarGroup.quaternion * headGroup.quaternion`. To make the
@@ -79,16 +86,17 @@ export function Avatar() {
       .invert()
       .multiply(camera.quaternion);
 
-    // 3. Camera sits at the head world position. lookAt along the rail
-    //    tangent — gives the desktop feel of "looking forward along the
-    //    rail". In VR, gl.xr replaces the camera transform post-frame.
-    const headWorld = headGroup.getWorldPosition(_tmpVec);
-    camera.position.copy(headWorld);
+    // 3. Chase cam: behind and above the rail point, looking past the
+    //    chest along the tangent so the full biped is in frame.
+    camera.position
+      .copy(railP)
+      .addScaledVector(railT, -CAM_BACK)
+      .addScaledVector(_up, CAM_HEIGHT);
     camera.up.copy(_up);
     camera.lookAt(
-      headWorld.x + railT.x,
-      headWorld.y + railT.y,
-      headWorld.z + railT.z,
+      railP.x + railT.x * LOOK_AHEAD,
+      railP.y + LOOK_HEIGHT,
+      railP.z + railT.z * LOOK_AHEAD,
     );
   });
 
