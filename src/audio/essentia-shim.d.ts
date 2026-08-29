@@ -10,6 +10,23 @@ declare module 'essentia.js/dist/essentia.js-core.es.js' {
       method?: string,
       minTempo?: number,
     ): { bpm: number; ticks: unknown };
+    KeyExtractor(
+      audio: unknown,
+      averageDetuningCorrection?: boolean,
+      frameSize?: number,
+      hopSize?: number,
+      hpcpSize?: number,
+      maxFrequency?: number,
+      maximumSpectralPeaks?: number,
+      minFrequency?: number,
+      pcpThreshold?: number,
+      profileType?: string,
+      sampleRate?: number,
+      spectralPeaksThreshold?: number,
+      tuningFrequency?: number,
+      weightType?: string,
+      windowType?: string,
+    ): { key: string; scale: string; strength: number };
   }
 }
 

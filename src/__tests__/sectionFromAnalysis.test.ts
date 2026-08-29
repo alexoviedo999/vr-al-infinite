@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  chimeFrequency,
   delayToNextBeat,
   sectionsFromEnergy,
   type EnergyWindow,
@@ -78,10 +77,4 @@ describe('delayToNextBeat', () => {
   });
 });
 
-describe('chimeFrequency', () => {
-  it('walks a pentatonic ladder and wraps', () => {
-    expect(chimeFrequency(0)).toBe(220);
-    expect(chimeFrequency(5)).toBe(440);
-    expect(chimeFrequency(8)).toBe(chimeFrequency(0));
-  });
-});
+

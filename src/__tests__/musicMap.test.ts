@@ -65,6 +65,10 @@ describe('MockMusicMap', () => {
     expect(a).not.toBe(b);
   });
 
+  it('defaults Chimes to A minor', () => {
+    expect(map.key()).toEqual({ tonicPc: 9, mode: 'minor' });
+  });
+
   it('ships a 120 BPM beat grid and a duration', () => {
     expect(map.durationSec()).toBe(60);
     const beats = map.beats();
@@ -86,6 +90,7 @@ describe('RealMusicMap', () => {
     durationSec: 120,
     bpm: 122,
     beats: [0, 0.5, 1],
+    key: { tonic: 'C', mode: 'major' },
     sections: [
       { name: 'intro', startT: 0.1, velocity: 0.6, curvature: [0, 0, 0] },
       { name: 'drop', startT: 0.5, velocity: 1.4, curvature: [0, 0, 0] },
@@ -101,5 +106,6 @@ describe('RealMusicMap', () => {
     expect(real.sections()).not.toBe(sections);
     expect(real.beats()).toEqual([0, 0.5, 1]);
     expect(real.durationSec()).toBe(120);
+    expect(real.key()).toEqual({ tonicPc: 0, mode: 'major' });
   });
 });
