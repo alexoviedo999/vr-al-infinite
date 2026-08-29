@@ -32,6 +32,10 @@ const SPLINE_API = {
 // Rebuilt when the active MusicMap changes (mock → extracted).
 let sectionsCache: readonly SectionBoundary[] = useMusicMapStore.getState().map.sections();
 
+export function getRailSections(): readonly SectionBoundary[] {
+  return sectionsCache;
+}
+
 /**
  * Drives the rail at section-velocity speed (#12) and publishes the
  * player pose (position + tangent) each frame for downstream consumers
@@ -129,8 +133,10 @@ export function RailMover() {
 function applyRailForMusicMapFlag(enabled: boolean): void {
   const sections = useMusicMapStore.getState().map.sections();
   sectionsCache = sections;
+  // curvatureScale = 0: extra Catmull-Rom knots jerk the camera.
+  // Section curvature is applied as a visual-only tunnel offset instead.
   const points = enabled
-    ? injectSectionInflections(CONTROL_POINTS, sections)
+    ? injectSectionInflections(CONTROL_POINTS, sections, 0)
     : CONTROL_POINTS;
   setControlPoints(points);
   useLockOnStore.getState().setSpline(SPLINE_API);

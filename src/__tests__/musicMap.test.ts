@@ -64,6 +64,20 @@ describe('MockMusicMap', () => {
     const b = map.sections();
     expect(a).not.toBe(b);
   });
+
+  it('ships a 120 BPM beat grid and a duration', () => {
+    expect(map.durationSec()).toBe(60);
+    const beats = map.beats();
+    expect(beats[0]).toBe(0);
+    expect(beats[1]).toBeCloseTo(0.5, 5);
+    expect(beats.length).toBe(120);
+  });
+
+  it('ships non-zero visual curvature inside the tunnel envelope', () => {
+    const drop = map.sections().find((s) => s.name === 'drop');
+    expect(drop).toBeDefined();
+    expect(drop!.curvature.length()).toBeGreaterThan(0.2);
+  });
 });
 
 describe('RealMusicMap', () => {
@@ -85,5 +99,7 @@ describe('RealMusicMap', () => {
     expect(sections[1].name).toBe('drop');
     expect(sections[1].curvature).toBeInstanceOf(THREE.Vector3);
     expect(real.sections()).not.toBe(sections);
+    expect(real.beats()).toEqual([0, 0.5, 1]);
+    expect(real.durationSec()).toBe(120);
   });
 });

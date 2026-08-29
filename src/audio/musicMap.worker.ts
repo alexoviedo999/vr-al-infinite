@@ -9,12 +9,12 @@ import {
 import type { ExtractRequest, ExtractResponse } from './extractProtocol';
 
 /**
- * Web Worker: decode uploaded audio off the main thread, run
- * essentia.js RhythmExtractor2013 (degara — faster on Quest Chromium),
- * then label sections from an RMS envelope. Posts a SerializedMusicMap.
+ * Web Worker: run essentia.js RhythmExtractor2013 (degara) on
+ * already-decoded mono PCM, then label sections from an RMS envelope.
+ * WASM is lazy-loaded with this worker, not the entry bundle.
  *
- * Main thread never decodes audio (CLAUDE.md). WASM is lazy-loaded
- * with this worker, not the entry bundle.
+ * Decode happens on the main thread at upload time only —
+ * OfflineAudioContext is not available in dedicated workers.
  */
 
 let essentia: InstanceType<typeof Essentia> | null = null;
@@ -46,21 +46,18 @@ function rmsWindows(mono: Float32Array, sampleRate: number): EnergyWindow[] {
   return out;
 }
 
-self.onmessage = async (event: MessageEvent<ExtractRequest>) => {
+self.onmessage = (event: MessageEvent<ExtractRequest>) => {
   try {
-    const { buffer, name } = event.data;
-    const ctx = new OfflineAudioContext(1, 1, 44100);
-    const audio = await ctx.decodeAudioData(buffer);
+    const { samples, sampleRate, durationSec, name } = event.data;
     const ess = getEssentia();
-    const mono = ess.audioBufferToMonoSignal(audio);
-    const vector = ess.arrayToVector(mono);
+    const vector = ess.arrayToVector(samples);
     const rhythm = ess.RhythmExtractor2013(vector, 208, 'degara', 40);
     const map: SerializedMusicMap = {
       trackId: name,
-      durationSec: audio.duration,
+      durationSec,
       bpm: Number(rhythm.bpm) || 0,
       beats: asNumbers(rhythm.ticks, ess),
-      sections: sectionsFromEnergy(audio.duration, rmsWindows(mono, audio.sampleRate)),
+      sections: sectionsFromEnergy(durationSec, rmsWindows(samples, sampleRate)),
     };
     const response: ExtractResponse = { ok: true, map };
     self.postMessage(response);

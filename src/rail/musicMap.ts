@@ -41,6 +41,10 @@ export interface SectionBoundary {
  *  the prototype ships with a hardcoded mock. */
 export interface MusicMap {
   sections(): readonly SectionBoundary[];
+  /** Beat timestamps in seconds from track start. Empty if unknown. */
+  beats(): readonly number[];
+  /** Track length in seconds; used to map rail t → playhead. */
+  durationSec(): number;
 }
 
 /**
@@ -49,18 +53,10 @@ export interface MusicMap {
  * boundaries are spaced roughly into the middle half of the rail so
  * velocity transitions fall inside the tunnel envelope.
  *
- * MockMusicMap ships with every curvature vector set to zero. The
- * Catmull-Rom knot wobble at any extra control point is structural
- * (it twists tangent direction at neighbouring knots, which the body
- * reads as a jerk regardless of magnitude). The user iterated on
- * values for several rounds and reported the rail still felt like a
- * roller coaster at any non-zero curvature, so the prototype ships
- * curvature-free.
- *
- * The `curvature` field is still part of `SectionBoundary` so a real
- * essentia-driven MusicMap (or a future non-Catmull-Rom spline) can
- * supply non-zero values later. The seam stays; only MockMusicMap's
- * payloads are empty for now.
+ * Curvature is non-zero and consumed as a *visual-only* lateral offset
+ * on tunnel meshes. It is not injected into the Catmull-Rom: extra
+ * knots jerk the camera (iterated to zero during #10). The rail stays
+ * smooth; the tunnel bends around it.
  *
  *   - intro     - slow (anticipation)
  *   - drop      - fastest (the rush)
@@ -80,9 +76,22 @@ export interface MusicMap {
 export class MockMusicMap implements MusicMap {
   sections(): readonly SectionBoundary[] {
     return [
-      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3(0, 0, 0), velocity: 0.6 },
-      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3(0, 0, 0), velocity: 1.4 },
-      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(0, 0, 0), velocity: 0.8 },
+      { name: 'intro',     startT: 0.10, curvature: new THREE.Vector3(0.4, 0.1, 0), velocity: 0.6 },
+      { name: 'drop',      startT: 0.55, curvature: new THREE.Vector3(-0.9, 0.25, 0), velocity: 1.4 },
+      { name: 'breakdown', startT: 0.80, curvature: new THREE.Vector3(0.55, -0.15, 0), velocity: 0.8 },
     ];
+  }
+
+  beats(): readonly number[] {
+    const bpm = 120;
+    const duration = this.durationSec();
+    const step = 60 / bpm;
+    const ticks: number[] = [];
+    for (let t = 0; t < duration; t += step) ticks.push(t);
+    return ticks;
+  }
+
+  durationSec(): number {
+    return 60;
   }
 }

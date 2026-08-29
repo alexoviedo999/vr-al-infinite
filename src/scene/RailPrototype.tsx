@@ -5,6 +5,7 @@ import { AimTracker } from './AimTracker';
 import { Avatar } from './Avatar';
 import { CascadeFlash } from './CascadeFlash';
 import { RailGridFloor } from './RailGridFloor';
+import { SectionTint } from './SectionTint';
 import { useTuningStore } from '../state/tuningStore';
 
 /**
@@ -43,6 +44,7 @@ export function RailPrototype() {
       <pointLight position={[0, 0, -3]} intensity={1.2} color="#5fd0ff" />
 
       <RailMover />
+      <SectionTint />
       <TunnelAlongSpline />
       <RailGridFloor />
       <OrbField />
