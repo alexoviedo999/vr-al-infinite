@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbField } from '../orbs/OrbField';
 import { AimTracker } from './AimTracker';
+import { CascadeFlash } from './CascadeFlash';
 
 /**
  * Lock-on feel prototype for ticket #6.
@@ -8,9 +9,8 @@ import { AimTracker } from './AimTracker';
  * Reads the mouse position to compute an aim direction (mouse → world
  * ray), runs the cone test each frame, renders targets with their
  * lock-progress as colour + scale + a lock ring, and cascades fires
- * when the player presses Space (desktop). VR trigger wiring is left
- * for a later ticket — the prototype's "feel" can be evaluated on
- * desktop alone.
+ * when the player presses Space (desktop) or the Quest trigger
+ * (`selectstart` via AimTracker).
  *
  * Replaces the bootstrap "hello" Scene in App.tsx while this ticket
  * is open; the bootstrap scene stays in source for reference.
@@ -26,6 +26,7 @@ export function LockOnPrototype() {
 
       <TunnelStub />
       <OrbField />
+      <CascadeFlash />
       <AimTracker />
     </>
   );

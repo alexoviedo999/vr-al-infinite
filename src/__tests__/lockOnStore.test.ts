@@ -166,6 +166,14 @@ describe('lockOnStore.fire', () => {
     const ids = useLockOnStore.getState().fire(0);
     expect(ids).toEqual([targets[0].id, targets[1].id, targets[2].id, targets[3].id]);
     expect(ids.length).toBeLessThanOrEqual(LOCKON_MAX_TARGETS);
+    expect(useLockOnStore.getState().lastCascade?.ids).toEqual(ids);
+  });
+
+  it('does not publish lastCascade when nothing is locked', () => {
+    useLockOnStore.setState({ lastCascade: null });
+    const ids = useLockOnStore.getState().fire(0);
+    expect(ids).toEqual([]);
+    expect(useLockOnStore.getState().lastCascade).toBeNull();
   });
 
   it('marks fired targets dead and respawns them on a delay', async () => {

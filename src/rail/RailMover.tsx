@@ -1,6 +1,5 @@
-import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo } from 'react';
-import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
+import { useEffect } from 'react';
 import {
   playerPosRef,
   playerTRef,
@@ -17,9 +16,10 @@ import {
 import { useLockOnStore } from '../state/lockOnStore';
 import { useTuningStore } from '../state/tuningStore';
 import { CONTROL_POINTS } from './points';
-import { MockMusicMap } from './musicMap';
+import { useMusicMapStore } from '../state/musicMapStore';
 import { injectSectionInflections } from './sectionInflection';
 import { velocityAt } from './sectionVelocity';
+import type { SectionBoundary } from './musicMap';
 
 const SPLINE_API = {
   position,
@@ -29,13 +29,13 @@ const SPLINE_API = {
 };
 
 // Cached section list for the per-frame velocity lookup (#12).
-// MockMusicMap.sections() returns a fresh array each call (the test
-// asserts this), but the rail doesn't mutate it, so caching a single
-// reference here is safe and avoids per-frame allocation.
-const SECTIONS = new MockMusicMap().sections();
+// Rebuilt when the active MusicMap changes (mock → extracted).
+let sectionsCache: readonly SectionBoundary[] = useMusicMapStore.getState().map.sections();
 
 /**
- * Drives the camera along the rail spline at constant speed.
+ * Drives the rail at section-velocity speed (#12) and publishes the
+ * player pose (position + tangent) each frame for downstream consumers
+ * (`RailGridFloor`, `AimTracker`, `Avatar`).
  *
  * On mount: builds the active control-point set from CONTROL_POINTS
  * (with section-boundary inflection points injected if the Music Map
@@ -47,16 +47,12 @@ const SECTIONS = new MockMusicMap().sections();
  * (augmented vs base) and the lockon store is re-published so the
  * `OrbField` Zustand subscriber picks up the new closures.
  *
- * Runs FIRST in the JSX (before TunnelAlongSpline, OrbField, AimTracker)
- * so the per-frame playerT write wins; R3F runs useFrame callbacks in
- * render-tree order. The camera write is harmless during a VR session
- * — R3F's XR pipeline replaces it before render — but it's the source
- * of truth on desktop.
+ * Runs FIRST in the JSX (before TunnelAlongSpline, RailGridFloor,
+ * OrbField, Avatar, AimTracker) so the per-frame playerT write wins;
+ * R3F runs useFrame callbacks in render-tree order. The camera is no
+ * longer written here — `Avatar` owns the camera now (#11).
  */
 export function RailMover() {
-  const { camera } = useThree();
-  const _up = useMemo(() => new THREE.Vector3(0, 1, 0), []);
-
   useEffect(() => {
     applyRailForMusicMapFlag(useTuningStore.getState().musicMapEnabled);
     useRailStore.getState().start();
@@ -66,17 +62,24 @@ export function RailMover() {
     };
   }, []);
 
-  // React to the music-map-enabled toggle. Each rebuild re-publishes
-  // the ISpline so the lockon store's `spline` selector picks up the
-  // new closures (Zustand re-renders subscribers only on reference
-  // change, which the fresh object literal guarantees).
+  // Rebuild when the velocity-inflection toggle flips OR a real Music
+  // Map replaces the mock (upload finished).
   useEffect(() => {
-    const unsub = useTuningStore.subscribe((s, prev) => {
+    const unsubTune = useTuningStore.subscribe((s, prev) => {
       if (s.musicMapEnabled !== prev.musicMapEnabled) {
         applyRailForMusicMapFlag(s.musicMapEnabled);
       }
     });
-    return unsub;
+    const unsubMap = useMusicMapStore.subscribe((s, prev) => {
+      if (s.map !== prev.map) {
+        sectionsCache = s.map.sections();
+        applyRailForMusicMapFlag(useTuningStore.getState().musicMapEnabled);
+      }
+    });
+    return () => {
+      unsubTune();
+      unsubMap();
+    };
   }, []);
 
   useFrame((_, dt) => {
@@ -88,7 +91,7 @@ export function RailMover() {
       // moves at baseSpeed × section.velocity while inside each Music
       // Map section. Falls back to baseSpeed when disabled.
       const speed = tuning.velocityProfileEnabled
-        ? velocityAt(playerTRef.current, SECTIONS, baseSpeed)
+        ? velocityAt(playerTRef.current, sectionsCache, baseSpeed)
         : baseSpeed;
       const d = arcLength(playerTRef.current) + speed * dt;
       const nextT = tFromArcLength(d);
@@ -106,10 +109,6 @@ export function RailMover() {
     const t = tangent(playerTRef.current);
     playerPosRef.current.copy(p);
     tangentRef.current.copy(t);
-
-    camera.position.copy(p);
-    camera.up.copy(_up);
-    camera.lookAt(p.x + t.x, p.y + t.y, p.z + t.z);
   });
 
   return null;
@@ -128,11 +127,10 @@ export function RailMover() {
  * debugging; not for live gameplay.
  */
 function applyRailForMusicMapFlag(enabled: boolean): void {
+  const sections = useMusicMapStore.getState().map.sections();
+  sectionsCache = sections;
   const points = enabled
-    ? injectSectionInflections(
-        CONTROL_POINTS,
-        new MockMusicMap().sections(),
-      )
+    ? injectSectionInflections(CONTROL_POINTS, sections)
     : CONTROL_POINTS;
   setControlPoints(points);
   useLockOnStore.getState().setSpline(SPLINE_API);

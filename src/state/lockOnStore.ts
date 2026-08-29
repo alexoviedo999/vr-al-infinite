@@ -53,6 +53,11 @@ export interface LockOnTarget {
   alive: boolean;
 }
 
+export interface LastCascade {
+  ids: number[];
+  atMs: number;
+}
+
 interface LockOnState {
   targets: LockOnTarget[];
   /** Set once by `setSpline` from the rail prototype; null in the lockon-only fallback path. */
@@ -60,6 +65,8 @@ interface LockOnState {
   /** Cached arc-length(1) of the active spline; populated by setSpline. */
   totalArcLength: number;
   aimDir: THREE.Vector3;
+  /** Most recent non-empty fire(); shooting FX subscribe to this. */
+  lastCascade: LastCascade | null;
 
   setSpline: (spline: ISpline | null) => void;
   resetRailTargets: () => void;
@@ -148,6 +155,7 @@ export const useLockOnStore = create<LockOnState>((set, get) => ({
   spline: null,
   totalArcLength: 0,
   aimDir: new THREE.Vector3(0, 0, -1),
+  lastCascade: null,
 
   setSpline: (spline) => {
     if (spline) {
@@ -218,6 +226,8 @@ export const useLockOnStore = create<LockOnState>((set, get) => ({
       .sort((a, b) => a.lockedAt! - b.lockedAt!);
     const ids = locked.slice(0, LOCKON_MAX_TARGETS).map((t) => t.id);
     const idSet = new Set(ids);
+    if (ids.length === 0) return ids;
+    set({ lastCascade: { ids, atMs: performance.now() } });
 
     // Stagger the kill so the cascade reads as a chord (Rez-style
     // "you actually scored a multi-hit" feedback), not a single pop.

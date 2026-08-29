@@ -1,5 +1,7 @@
 import { useTuningStore } from '../state/tuningStore';
 import { useLockOnStore } from '../state/lockOnStore';
+import { useMusicMapStore } from '../state/musicMapStore';
+import { extractMusicMap } from '../audio/extractMusicMap';
 
 /**
  * In-canvas tuning controls. Renders alongside the HUD with the same
@@ -16,15 +18,16 @@ export function DebugPanel() {
   const fogFar = useTuningStore((s) => s.fogFar);
   const ringTs = useTuningStore((s) => s.ringAnchorTs);
   const firstOrbAnchorT = useTuningStore((s) => s.firstOrbAnchorT);
-  const musicMapEnabled = useTuningStore((s) => s.musicMapEnabled);
   const velocityProfileEnabled = useTuningStore((s) => s.velocityProfileEnabled);
   const setSpeed = useTuningStore((s) => s.setSpeed);
   const setFogNear = useTuningStore((s) => s.setFogNear);
   const setFogFar = useTuningStore((s) => s.setFogFar);
   const setRingAnchorT = useTuningStore((s) => s.setRingAnchorT);
   const setFirstOrbAnchorT = useTuningStore((s) => s.setFirstOrbAnchorT);
-  const setMusicMapEnabled = useTuningStore((s) => s.setMusicMapEnabled);
   const setVelocityProfileEnabled = useTuningStore((s) => s.setVelocityProfileEnabled);
+  const mapStatus = useMusicMapStore((s) => s.status);
+  const mapError = useMusicMapStore((s) => s.error);
+  const mapSource = useMusicMapStore((s) => s.sourceName);
 
   return (
     <div
@@ -77,17 +80,6 @@ export function DebugPanel() {
         Live: rebuilds initial targets on every change
       </div>
 
-      <div style={{ marginTop: 6, color: '#5fd0ff' }}>music map</div>
-      <Checkbox
-        label="music map on"
-        checked={musicMapEnabled}
-        onChange={setMusicMapEnabled}
-      />
-      <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
-        Drives the velocity profile (#12). Curvature seam is in code
-        but ships empty — see MockMusicMap (#10).
-      </div>
-
       <div style={{ marginTop: 6, color: '#5fd0ff' }}>velocity profile</div>
       <Checkbox
         label="section velocity on"
@@ -95,10 +87,75 @@ export function DebugPanel() {
         onChange={setVelocityProfileEnabled}
       />
       <div style={{ marginTop: 4, opacity: 0.6, fontSize: 10 }}>
-        intro 0.6 / drop 1.4 / breakdown 0.8 (#12)
+        intro 0.6 / drop 1.4 / breakdown 0.8 — from the active Music Map
+      </div>
+
+      <div style={{ marginTop: 6, color: '#5fd0ff' }}>track</div>
+      <label style={{ display: 'block', margin: '4px 0', fontSize: 10, color: '#7a8a9a' }}>
+        upload audio
+        <input
+          type="file"
+          accept="audio/*,.aiff,.aif,.wav,.mp3"
+          disabled={mapStatus === 'extracting'}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (file) void analyseFile(file);
+          }}
+          style={{ display: 'block', marginTop: 4, maxWidth: 200 }}
+        />
+      </label>
+      <button
+        type="button"
+        disabled={mapStatus === 'extracting'}
+        onClick={() => void analyseUrl('/demo-tracks/dj-deep-stressed.aiff', 'dj-deep-stressed')}
+        style={{
+          marginTop: 4,
+          background: '#0d1d2e',
+          border: '1px solid #2a3a4a',
+          color: '#5fd0ff',
+          fontFamily: 'monospace',
+          fontSize: 10,
+          padding: '4px 8px',
+          cursor: 'pointer',
+        }}
+      >
+        analyse demo: Stressed
+      </button>
+      <div style={{ marginTop: 4, opacity: 0.7, fontSize: 10 }}>
+        {mapStatus === 'extracting' && `analysing ${mapSource ?? ''}…`}
+        {mapStatus === 'ready' && `map ready: ${mapSource}`}
+        {mapStatus === 'error' && `error: ${mapError}`}
+        {mapStatus === 'idle' && 'mock map (upload to replace)'}
       </div>
     </div>
   );
+}
+
+async function analyseFile(file: File): Promise<void> {
+  const store = useMusicMapStore.getState();
+  store.setExtracting(file.name);
+  try {
+    const buffer = await file.arrayBuffer();
+    const map = await extractMusicMap(buffer, file.name);
+    store.setReady(map);
+  } catch (err) {
+    store.setError(err instanceof Error ? err.message : String(err));
+  }
+}
+
+async function analyseUrl(url: string, name: string): Promise<void> {
+  const store = useMusicMapStore.getState();
+  store.setExtracting(name);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`fetch ${url} → ${res.status}`);
+    const buffer = await res.arrayBuffer();
+    const map = await extractMusicMap(buffer, name);
+    store.setReady(map);
+  } catch (err) {
+    store.setError(err instanceof Error ? err.message : String(err));
+  }
 }
 
 function Slider({

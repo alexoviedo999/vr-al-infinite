@@ -16,6 +16,12 @@ export default defineConfig({
     host: true,
     port: 5173,
   },
+  worker: {
+    format: 'es',
+  },
+  optimizeDeps: {
+    exclude: ['essentia.js'],
+  },
   build: {
     target: 'es2022',
     sourcemap: true,
